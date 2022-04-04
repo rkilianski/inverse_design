@@ -1,6 +1,6 @@
 import meep as mp
 import numpy as np
-import inverse_design_no_dft as inv
+import inverse_design_no_dft_at_point as inv
 import module_hg_beam as mhg
 
 from matplotlib import pyplot as plt, animation
@@ -11,11 +11,13 @@ CHOSEN_POINT = 20
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 5
-T = 100
+ITERATIONS = 50
+T = 80
 
 pixel_size = 1 / RESOLUTION
-block_size = pixel_size
+MULTIPLIER = 2  # must be an int !
+block_size = MULTIPLIER * pixel_size
+blk_data = [MULTIPLIER, block_size]
 radius_squared = block_size ** 2
 
 # #  Setting up the simulation box
@@ -31,7 +33,7 @@ geom_list = []
 
 # #  Source and observation points
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
-OBS_POS_X, OBS_POS_Y, OBS_POS_Z = 0.5, 1, 0
+OBS_POS_X, OBS_POS_Y, OBS_POS_Z = 0.5, 3, 0
 
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 obs_loc = [OBS_POS_X, OBS_POS_Y, OBS_POS_Z]
@@ -41,6 +43,8 @@ M, N = 0, 0
 WAVELENGTH = 1
 WAIST = 2
 DT = 5
+# Desired improvement(decrease) on intensity-i0, by IMP times
+IMP = 1.1
 
 freq = 1 / WAVELENGTH
 slice_volume = mp.Volume(center=mp.Vector3(), size=OBS_VOL)  # area of fourier transform
@@ -64,24 +68,20 @@ src_data = [cell_3d, hg_beam, pml_layers, RESOLUTION, geom_list]
 
 # **********************************************************************************************************************
 
-data = inv.produce_simulation(src_data, block_size, freq, slice_volume, T, OBS_VOL, obs_loc, src_loc, lists, ITERATIONS,
+data = inv.produce_simulation(IMP, src_data, blk_data, freq, T, OBS_VOL, obs_loc, src_loc, lists,
+                              ITERATIONS,
                               SLICE_AXIS,
                               DT)
 
-[x, y, z], forward_field, adjoint_field, forward_field_ft, adjoint_field_ft, intensities = data
+[x, y, z], forward_field, adjoint_field, intensities = data
 Ex, Ey, Ez, eps = forward_field
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
-# Ex_ft, Ey_ft, Ez_ft, eps_ft = forward_field_ft
-# Ex_a_ft, Ey_a_ft, Ez_a_ft, eps_a_ft = adjoint_field_ft
 
-intensity_for_anim, intensity_for_plot = intensities
+intensity_a, intensity_for_plot = intensities
 
 merit_function = inv.df(forward_field, adjoint_field)
-# merit_function_ft = inv.df(forward_field_ft, adjoint_field_ft)
 e_squared = inv.get_intensity(forward_field)
-
-
-# e_squared_ft = inv.get_intensity(forward_field_ft)
+e_squared_adj = inv.get_intensity(adjoint_field)
 
 
 ########################################################################################################################
@@ -118,12 +118,31 @@ def spherify(arr, axes, rad):
     return new_points
 
 
+def enlarge_block(arr, axes, multi):
+    new_points = []
+    u, v, w = axes
+    for tup in arr:
+        for i in range(0, multi):
+            new_x = tup[0] + i
+            for j in range(multi):
+                new_y = tup[1] + j
+                for k in range(multi):
+                    new_z = tup[2] + k
+                    new_points.append((new_x, new_y, new_z))
+
+    return new_points
+
+
 x_obs_index = inv.find_nearest(x, OBS_POS_X)
 y_obs_index = inv.find_nearest(y, OBS_POS_Y)
 z_obs_index = inv.find_nearest(z, OBS_POS_Z)
 observation_index = [x_obs_index, y_obs_index, z_obs_index]
 
-grid = cubify(points_for_3D_plot, [x, y, z])
+larger_blocks = enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
+grid = cubify(larger_blocks, [x, y, z])
+
+improved_value = intensity_at_obs[-1]
+desired_intensity = IMP * intensity_at_obs[0] * np.ones(ITERATIONS)
 
 fig = plt.figure()
 ax = fig.add_subplot(3, 2, 1)
@@ -133,26 +152,27 @@ ax.set_title('dF')
 ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax = fig.add_subplot(3, 2, 2)
-ax.pcolormesh(x, y, np.transpose(np.real(merit_function)))
-ax.set_title('Fourier transformed dF')
+ax.pcolormesh(x, y, np.transpose(np.real(Ez)))
+ax.set_title('Ez')
 # ax.pcolormesh(x, y, np.transpose(np.real(eps_data2d_ft)), cmap='Greys', alpha=1)
 ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax = fig.add_subplot(3, 2, 3)
-ax.pcolormesh(x, y, np.transpose(np.real(e_squared)))
-ax.set_title('Fourier transformed intensity')
+ax.pcolormesh(x, y, np.transpose(np.real(e_squared_adj)))
+ax.set_title('Adjoint field intensity')
 # ax.pcolormesh(x, y, np.transpose(np.real(eps_data2d_ft)), cmap='Greys', alpha=1)
 ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax = fig.add_subplot(3, 2, 4)
 ax.pcolormesh(x, y, np.transpose(np.real(e_squared)))
-ax.set_title('intensity')
+ax.set_title(f'intensity, observation point at the value of {round(improved_value, 5)}')
 # ax.pcolormesh(x, y, np.transpose(np.real(eps_data2d)), cmap='Greys', alpha=1)
 ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax = fig.add_subplot(3, 2, 5)
 ax.plot(blocks_added, intensity_at_obs)
-ax.set_title('Intensity after adding a block')
+ax.plot(blocks_added, desired_intensity, 'red')
+ax.set_title('Intensity after adding a block and desired intensity')
 
 ax = fig.add_subplot(3, 2, 6, projection='3d')
 ax.set_title(f"3D structure optimizing intensity at the point: {OBS_POS_X, OBS_POS_Y, OBS_POS_Z}")
@@ -165,13 +185,15 @@ plt.rcParams["figure.figsize"] = [6.00, 6.00]
 plt.rcParams["figure.autolayout"] = True
 fig_a, ax_a = plt.subplots()
 
-intns = ax_a.pcolormesh(x, y, np.transpose(intensity_anim[0]))
+intns = ax_a.pcolormesh(x, y, np.transpose(intensity_a[0]))
 ax_a.plot(x[x_obs_index], y[y_obs_index], 'ro')
+
 fig_a.colorbar(intns)
 
 
 def animate(i):
-    intns.set_array(np.transpose(intensity_anim[i][:, :]).flatten())
+    intns.set_array(np.transpose(intensity_a[i][:, :]).flatten())
+    ax_a.set_title(f"Improvement of intensity: {round(intensity_at_obs[0] / intensity_at_obs[i], 3)}/{IMP}")
 
 
 anim = animation.FuncAnimation(fig_a, animate, interval=100, frames=ITERATIONS)

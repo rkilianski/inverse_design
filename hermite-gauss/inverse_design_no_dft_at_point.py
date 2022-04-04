@@ -75,8 +75,9 @@ def df(old_field_arr, adj_field_arr):
 def df_point(old_field_arr, adj_field_arr, value):
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr
-    intensity = get_intensity(old_field_arr)
-    d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - value)
+    # intensity = get_intensity(old_field_arr)
+    # # d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - value)
+    d_func = np.real((a1 * e1 + a2 * e2 + a3 * e3))
     return d_func
 
 
