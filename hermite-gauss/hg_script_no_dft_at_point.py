@@ -33,7 +33,7 @@ geom_list = []
 
 # #  Source and observation points
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
-OBS_POS_X, OBS_POS_Y, OBS_POS_Z = 0.5, 2, 0
+OBS_POS_X, OBS_POS_Y, OBS_POS_Z = 0.5, 3, 0
 
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 obs_loc = [OBS_POS_X, OBS_POS_Y, OBS_POS_Z]
