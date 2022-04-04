@@ -11,8 +11,8 @@ CHOSEN_POINT = 20
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 20
-T = 100
+ITERATIONS = 50
+T = 80
 
 pixel_size = 1 / RESOLUTION
 MULTIPLIER = 2  # must be an int !
