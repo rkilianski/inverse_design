@@ -61,7 +61,9 @@ components = [mp.Ex, mp.Ey, mp.Ez]
 
 # ######################            DEFINING AN INTENSITY PATTERN
 def fun(u, v):
-    return np.sin(4 * (u + v)) + np.cos(4 * (u - v))
+    function = np.sin(4 * (u + v)) + np.cos(4 * (u - v))
+    norm_fun = 1 / np.amax(function)
+    return norm_fun * function
 
 
 # ***************************************** CREATING A BEAM ************************************************************

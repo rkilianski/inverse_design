@@ -57,13 +57,13 @@ def pw_maker(freq, kDir, pol, srcPos, srcBox, complex_phase=1):
     return xPart, yPart
 
 
-k1 = [1, 0]
+k1 = [1, 1]
 
 sourceLineX = mp.Vector3(0, cell_size_y, 0)
 
 # Plane wave source for input wave
 
-sourceForward = pw_maker(freq=fcen, kDir=[1, 0, 0], pol=[0, 1, 0], srcPos=[-cell_size_x / 2, 0, 0], srcBox=sourceLineX)
+sourceForward = pw_maker(freq=fcen, kDir=[1, 1, 0], pol=[0, 1, 0], srcPos=[-cell_size_x / 2, 0, 0], srcBox=sourceLineX)
 
 # Continuous source for fictitious dipole, with amplitude found from the forward sim
 
@@ -82,7 +82,7 @@ def sourceAdjoint(amp):
 
 
 def simFn(source, name):
-    t = 100  # run time
+    t = 20 # run time
 
     sim = mp.Simulation(
         cell_size=cell,
@@ -122,7 +122,7 @@ def optregion(pos):
 
 
 geom = []
-R = 100
+R = 5
 for i in range(R):
     simFn(sourceForward, "Forward")
     x, y, z, w = np.load("metaDataForward.npy", allow_pickle=True)

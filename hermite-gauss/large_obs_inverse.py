@@ -231,7 +231,6 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
     delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)
-    # delta_f[x_obs_index:, :, :] = np.zeros((len(x) - x_obs_index, len(y), len(z)))
 
     ########################################################################################################################
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
@@ -290,9 +289,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         adjoint_field = get_fields(sim_adjoint, obs_vol)
         adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
-        #  Calculating the dF and restricting it to the left side of the observation point
         delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)
-        # delta_f[x_obs_index:, :, :] = np.zeros((len(x) - x_obs_index, len(y), len(z)))
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
