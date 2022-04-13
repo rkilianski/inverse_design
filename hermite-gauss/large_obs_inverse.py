@@ -135,7 +135,7 @@ def produce_adjoint_field(forward_field, freq, dt, arr_coord, arr_obs_pts):
     return source_at_obs
 
 
-def produce_obs_area(obs_point_index, field, freq, dt, arr_coord):
+def produce_obs_area(field, freq, dt, arr_coord):
     source_area = []
     x_ax, y_ax, z_ax = arr_coord
     for i in range(len(x_ax)):
@@ -212,9 +212,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     intensity_2D_blocks = delete_existing(intensity_2D, points_for_3D_plot, False, multiplier)
     intensity_anim.append(intensity_2D_blocks)
     # Exciting a fictitious dipole for the adjoint field
-    dipole_at_obs = produce_obs_area(z_obs_index, old_field, ft_freq, adj_dt, [x, y, z])
-    # Getting the starting intensity and the desired improvement(or reduction)
-    intensity_at_0 = get_intensity(old_field)
+    dipole_at_obs = produce_obs_area(old_field, ft_freq, adj_dt, [x, y, z])
 
     sim_adjoint = mp.Simulation(
         cell_size=cell_size,
@@ -278,7 +276,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
 
         sim_adjoint = mp.Simulation(
             cell_size=cell_size,
-            sources=produce_obs_area(z_obs_index, old_field, ft_freq, adj_dt, [x, y, z]),
+            sources=produce_obs_area(old_field, ft_freq, adj_dt, [x, y, z]),
             boundary_layers=pml,
             resolution=res,
             geometry=geo_lst,
