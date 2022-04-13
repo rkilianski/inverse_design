@@ -9,7 +9,7 @@ def get_intensity(arr):
     """Returns normalised intensity I for all x and y. """
     ex, ey, ez = arr[: 3]
     e_sq = np.real(ex * np.conjugate(ex) + ey * np.conjugate(ey) + ez * np.conjugate(ez))
-    norm_e_sq = (1/(np.amax(e_sq)))*e_sq
+    norm_e_sq = (1 / (np.amax(e_sq))) * e_sq
     return norm_e_sq
 
 
@@ -53,7 +53,7 @@ def exclude_points(arr_axes, arr_src, arr_obs, points_list):
             for z_i in z:
                 src_dist = _delta(x_i, x, x_src_i) + _delta(y_i, y, y_src_i) + _delta(z_i, z, z_src_i)
 
-                if src_dist < 1:
+                if src_dist < 0.5:
                     x_index = np.where(x == x_i)[0][0]
                     y_index = np.where(y == y_i)[0][0]
                     z_index = np.where(z == z_i)[0][0]
@@ -70,16 +70,16 @@ def df(old_field_arr, adj_field_arr):
     return d_func
 
 
-def df_point(old_field_arr, adj_field_arr, axes):
+def df_point(old_field_arr, adj_field_arr, axes, fun):
     x, y, z = axes
     xx, yy, zz = np.meshgrid(x, y, z)
-    fun = np.sin(4 * (xx + yy)) + np.cos(4 * (xx - yy))
-    print(fun.shape)
+    fun = fun(xx, yy)
+    # fun = np.sin(4 * (xx + yy)) + np.cos(4 * (xx - yy))
+
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr
     intensity = get_intensity(old_field_arr)
     d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - fun)
-    # d_func = np.real((a1 * e1 + a2 * e2 + a3 * e3))
     return d_func
 
 
@@ -167,7 +167,7 @@ def add_block(arr_centre, block_size, geo_lst):
 # SIMULATION FIRST STEP - producing a dipole and obtaining parameters for the sim (meep chosen axes and obs points)
 # **********************************************************************************************************************
 
-def produce_simulation(i0, src_param_arr, multi_block_arr, ft_freq, time, obs_vol, obs_pt_arr, src_pt_arr, lsts,
+def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_vol, obs_pt_arr, src_pt_arr, lsts,
                        iter,
                        slc_ax,
                        adj_dt):
@@ -215,7 +215,6 @@ def produce_simulation(i0, src_param_arr, multi_block_arr, ft_freq, time, obs_vo
     dipole_at_obs = produce_obs_area(z_obs_index, old_field, ft_freq, adj_dt, [x, y, z])
     # Getting the starting intensity and the desired improvement(or reduction)
     intensity_at_0 = get_intensity(old_field)
-    desired_intensity = i0 * intensity_at_0
 
     sim_adjoint = mp.Simulation(
         cell_size=cell_size,
@@ -233,7 +232,7 @@ def produce_simulation(i0, src_param_arr, multi_block_arr, ft_freq, time, obs_vo
     adjoint_field = get_fields(sim_adjoint, obs_vol)
     adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
-    delta_f = df_point(old_field, adjoint_field, [x, y, z])
+    delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)
     # delta_f[x_obs_index:, :, :] = np.zeros((len(x) - x_obs_index, len(y), len(z)))
 
     ########################################################################################################################
@@ -294,7 +293,7 @@ def produce_simulation(i0, src_param_arr, multi_block_arr, ft_freq, time, obs_vo
         adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
         #  Calculating the dF and restricting it to the left side of the observation point
-        delta_f = df_point(old_field, adjoint_field, [x, y, z])
+        delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)
         # delta_f[x_obs_index:, :, :] = np.zeros((len(x) - x_obs_index, len(y), len(z)))
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry

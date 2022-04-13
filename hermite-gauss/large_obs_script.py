@@ -10,7 +10,7 @@ CHOSEN_POINT = 20
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 4
+ITERATIONS = 2
 T = 30
 
 pixel_size = 1 / RESOLUTION
@@ -58,6 +58,12 @@ lists = [intensity_anim, intensity_at_obs, points_to_delete, points_for_3D_plot]
 blocks_added = np.arange(ITERATIONS)
 components = [mp.Ex, mp.Ey, mp.Ez]
 
+
+# ######################            DEFINING AN INTENSITY PATTERN
+def fun(u, v):
+    return np.sin(4 * (u + v)) + np.cos(4 * (u - v))
+
+
 # ***************************************** CREATING A BEAM ************************************************************
 
 hg_beam = mhg.make_hg_beam(freq, WAVELENGTH, [0, sy, sz], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z], dir_prop=0, waist=WAIST,
@@ -67,7 +73,7 @@ src_data = [cell_3d, hg_beam, pml_layers, RESOLUTION, geom_list]
 
 # **********************************************************************************************************************
 
-data = inv.produce_simulation(IMP, src_data, blk_data, freq, T, OBS_VOL, obs_loc, src_loc, lists,
+data = inv.produce_simulation(fun, src_data, blk_data, freq, T, OBS_VOL, obs_loc, src_loc, lists,
                               ITERATIONS,
                               SLICE_AXIS,
                               DT)
@@ -141,7 +147,7 @@ larger_blocks = enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
 grid = cubify(larger_blocks, [x, y, z])
 
 improved_value = intensity_at_obs[-1]
-desired_intensity = IMP * intensity_at_obs[0] * np.ones(ITERATIONS)
+# desired_intensity = IMP * intensity_at_obs[0] * np.ones(ITERATIONS)
 
 fig = plt.figure()
 ax = fig.add_subplot(3, 2, 1)
@@ -170,7 +176,7 @@ ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax = fig.add_subplot(3, 2, 5)
 ax.plot(blocks_added, intensity_at_obs)
-ax.plot(blocks_added, desired_intensity, 'red')
+# ax.plot(blocks_added, desired_intensity, 'red')
 ax.set_title('Intensity after adding a block and desired intensity')
 
 ax = fig.add_subplot(3, 2, 6, projection='3d')
