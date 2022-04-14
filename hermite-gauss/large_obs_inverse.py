@@ -53,7 +53,7 @@ def exclude_points(arr_axes, arr_src, arr_obs, points_list):
             for z_i in z:
                 src_dist = _delta(x_i, x, x_src_i) + _delta(y_i, y, y_src_i) + _delta(z_i, z, z_src_i)
 
-                if src_dist < 0.5:
+                if src_dist < 0.3:
                     x_index = np.where(x == x_i)[0][0]
                     y_index = np.where(y == y_i)[0][0]
                     z_index = np.where(z == z_i)[0][0]
@@ -74,13 +74,14 @@ def df_point(old_field_arr, adj_field_arr, axes, fun):
     x, y, z = axes
     xx, yy, zz = np.meshgrid(x, y, z)
     fun = fun(xx, yy)
+
     # fun = np.sin(4 * (xx + yy)) + np.cos(4 * (xx - yy))
 
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr
     intensity = get_intensity(old_field_arr)
-    d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - fun)
-    return d_func
+    d_func = 2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - fun)
+    return d_func, fun
 
 
 def delete_existing(arr, lst, dim_3D=True, multi=1):
@@ -230,7 +231,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     adjoint_field = get_fields(sim_adjoint, obs_vol)
     adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
-    delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)
+    delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)[0]
 
     ########################################################################################################################
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
@@ -289,7 +290,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         adjoint_field = get_fields(sim_adjoint, obs_vol)
         adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
-        delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)
+        delta_f = df_point(old_field, adjoint_field, [x, y, z], fun)[0]
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
@@ -304,7 +305,8 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     forward_2D = get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
     adjoint_2D = get_fields(sim_adjoint, obs_vol, True, slice_axis, z_obs_index)
     df_2D = delta_f[:, :, z_obs_index]
+    fun_2D = df_point(old_field, adjoint_field, [x, y, z], fun)[1][:, :, z_obs_index]
     axes = [x, y, z]
     intensities = [intensity_anim, intensity_at_obs]
 
-    return axes, forward_2D, adjoint_2D, df_2D, intensities
+    return axes, forward_2D, adjoint_2D, df_2D, fun_2D, intensities

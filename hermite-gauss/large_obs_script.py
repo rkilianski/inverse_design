@@ -10,7 +10,7 @@ CHOSEN_POINT = 20
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 2
+ITERATIONS = 200
 T = 30
 
 pixel_size = 1 / RESOLUTION
@@ -61,9 +61,10 @@ components = [mp.Ex, mp.Ey, mp.Ez]
 
 # ######################            DEFINING AN INTENSITY PATTERN
 def fun(u, v):
-    function = np.sin(4 * (u + v)) + np.cos(4 * (u - v))
+    function = np.cos(4 * (u + v)) + np.cos(4 * (u - v))
     norm_fun = 1 / np.amax(function)
     return norm_fun * function
+
 
 
 # ***************************************** CREATING A BEAM ************************************************************
@@ -80,12 +81,13 @@ data = inv.produce_simulation(fun, src_data, blk_data, freq, T, OBS_VOL, obs_loc
                               SLICE_AXIS,
                               DT)
 
-[x, y, z], forward_field, adjoint_field, df_2D, intensities = data
+[x, y, z], forward_field, adjoint_field, df_2D, fun_2D, intensities = data
 Ex, Ey, Ez, eps = forward_field
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
 
 intensity_a, intensity_for_plot = intensities
 
+pattern = fun_2D
 merit_function = df_2D
 e_squared = inv.get_intensity(forward_field)
 e_squared_adj = inv.get_intensity(adjoint_field)
@@ -159,8 +161,8 @@ ax.set_title('dF')
 ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax = fig.add_subplot(3, 2, 2)
-ax.pcolormesh(x, y, np.transpose(np.real(Ez)))
-ax.set_title('Ez')
+ax.pcolormesh(x, y, np.transpose(pattern))
+ax.set_title('Desired intensity pattern.')
 # ax.pcolormesh(x, y, np.transpose(np.real(eps_data2d_ft)), cmap='Greys', alpha=1)
 ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
 
