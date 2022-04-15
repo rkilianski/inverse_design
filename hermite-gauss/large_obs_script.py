@@ -59,12 +59,11 @@ blocks_added = np.arange(ITERATIONS)
 components = [mp.Ex, mp.Ey, mp.Ez]
 
 
-# ######################            DEFINING AN INTENSITY PATTERN
+# ***************************************** INTENSITY PATTERN **********************************************************
 def fun(u, v):
     function = np.cos(4 * (u + v)) + np.cos(4 * (u - v))
     norm_fun = 1 / np.amax(function)
     return norm_fun * function
-
 
 
 # ***************************************** CREATING A BEAM ************************************************************

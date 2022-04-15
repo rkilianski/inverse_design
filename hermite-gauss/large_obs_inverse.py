@@ -153,19 +153,41 @@ def produce_adjoint_field(forward_field, freq, dt, arr_coord, arr_obs_pts):
     return source_at_obs
 
 
-def produce_obs_area(field, freq, dt, arr_coord):
-    source_area = []
+def produce_adjoint_volume(field, freq, dt, arr_coord):
+    source_volume = []
     x_ax, y_ax, z_ax = arr_coord
     for i in range(len(x_ax)):
         for j in range(len(y_ax)):
             for k in range(len(z_ax)):
                 for element in range(3):
-                    source_area.append(mp.Source(
+                    source_volume.append(mp.Source(
                         mp.ContinuousSource(freq, width=dt, is_integrated=True),
                         component=[mp.Ex, mp.Ey, mp.Ez][element],
                         size=mp.Vector3(),
                         center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
                         amplitude=np.conjugate(field[element][i, j, k])))
+    return source_volume
+
+
+def produce_adjoint_area(field, freq, dt, arr_coord, obs_point, reduced_area=False):
+    source_area = []
+    x_ax, y_ax, z_ax = arr_coord
+    l0 = 0
+    ll = len(x_ax)
+    if reduced_area:
+        l0 = int(len(x_ax) / 4)
+        ll = 3*l0
+        x_ax = x_ax[l0:ll]
+        y_ax = y_ax[l0:ll]
+    for i in range(l0, ll):
+        for j in range(l0, ll):
+            for element in range(3):
+                source_area.append(mp.Source(
+                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                    component=[mp.Ex, mp.Ey, mp.Ez][element],
+                    size=mp.Vector3(),
+                    center=mp.Vector3(x_ax[i], y_ax[j], z_ax[obs_point]),
+                    amplitude=np.conjugate(field[element][i, j, obs_point])))
     return source_area
 
 
@@ -233,7 +255,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     intensity_2D_blocks = delete_existing(intensity_2D, points_for_3D_plot, False, multiplier)
     intensity_anim.append(intensity_2D_blocks)
     # Exciting a fictitious dipole for the adjoint field
-    dipole_at_obs = produce_obs_area(old_field, ft_freq, adj_dt, [x, y, z])
+    dipole_at_obs = produce_adjoint_volume(old_field, ft_freq, adj_dt, [x, y, z])
 
     sim_adjoint = mp.Simulation(
         cell_size=cell_size,
@@ -292,11 +314,10 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
 
         # recording intensity at observation point after adding a block in a previous turn
         intensity_at_obs.append(intensity_at_point(old_field, x_obs_index, y_obs_index, z_obs_index))
-        # recording intensity over a time interval
 
         sim_adjoint = mp.Simulation(
             cell_size=cell_size,
-            sources=produce_obs_area(old_field, ft_freq, adj_dt, [x, y, z]),
+            sources=produce_adjoint_volume(old_field, ft_freq, adj_dt, [x, y, z]),
             boundary_layers=pml,
             resolution=res,
             geometry=geo_lst,
