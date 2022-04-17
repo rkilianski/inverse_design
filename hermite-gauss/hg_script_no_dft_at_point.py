@@ -12,7 +12,7 @@ CHOSEN_POINT = 20
 # #  Parameters of the simulation
 RESOLUTION = 6
 ITERATIONS = 50
-T = 80
+T = 100
 
 pixel_size = 1 / RESOLUTION
 MULTIPLIER = 2  # must be an int !
@@ -32,8 +32,8 @@ material = mp.Medium(epsilon=1)
 geom_list = []
 
 # #  Source and observation points
-SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
-OBS_POS_X, OBS_POS_Y, OBS_POS_Z = 0.5, 3, 0
+SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 1.5, 0
+OBS_POS_X, OBS_POS_Y, OBS_POS_Z = 0.5, 0.5, 0
 
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 obs_loc = [OBS_POS_X, OBS_POS_Y, OBS_POS_Z]

@@ -10,7 +10,7 @@ T = 100
 FCEN = 5 / np.pi
 DF = 0.02  # turn-on bandwidth
 
-ITERATIONS = 1
+ITERATIONS = 100
 
 OBS_X_A, OBS_Y_A = 6, 6  # dimensions of the computational cell, not including PML
 OBS_VOL = mp.Vector3(OBS_X_A, OBS_Y_A)
@@ -18,7 +18,7 @@ CELL_X, CELL_Y = 8, 8
 CELL = mp.Vector3(CELL_X + 2 * DPML, CELL_Y + 2 * DPML)
 
 SOURCE_POSITION_X, SOURCE_POSITION_Y = -OBS_X_A / 2, 0
-OBS_POSITION_X, OBS_POSITION_Y = 1, -OBS_Y_A
+OBS_POSITION_X, OBS_POSITION_Y = 2.5, -OBS_Y_A
 
 MATERIAL = mp.Medium(epsilon=1)
 OMEGA = np.pi  # angular frequency of emitter
@@ -69,10 +69,10 @@ def pw_amp(k, x0):
 def make_2D_wave(freq, kDir, srcPos, srcBox):
     kDir = mp.Vector3(kDir[0], kDir[1])
     kVec = kDir.unit().scale(2 * np.pi * freq)
-    z_dipole = mp.Source(mp.ContinuousSource(FCEN, fwidth=DF), component=mp.Ey,
+    y_dipole = mp.Source(mp.ContinuousSource(FCEN, fwidth=DF), component=mp.Ey,
                          center=srcPos, size=srcBox,
                          amp_func=pw_amp(kVec, mp.Vector3(SOURCE_POSITION_X, SOURCE_POSITION_Y)))
-    return [z_dipole]
+    return [y_dipole]
 
 
 def get_fields(simulation):
@@ -180,8 +180,8 @@ y_obs_index = find_nearest(y, OBS_POSITION_Y)
 x_src_index = find_nearest(x, SOURCE_POSITION_X)
 y_src_index = find_nearest(y, SOURCE_POSITION_Y)
 
-origin_x = find_nearest(x, 0)
-origin_y = find_nearest(y, 0)
+origin_x = find_nearest(x, 2)
+origin_y = find_nearest(y, 2)
 
 DIPOLE_AT_OBS = produce_adjoint_field(old_field)
 
@@ -202,6 +202,7 @@ sim_adjoint.run(until=T)
 adjoint_field = get_fields(sim_adjoint)
 
 delta_f = df(old_field, adjoint_field)
+original_df = np.copy(delta_f)
 
 delta_f[origin_x:, :] = np.zeros((len(x) - origin_x, len(y)))
 delta_f[:5, :] = np.zeros((5, len(y)))
@@ -275,6 +276,7 @@ e_squared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.con
 e_squared = (1 / np.amax(e_squared)) * e_squared
 
 delta_f = (1 / np.amax(np.real(delta_f))) * delta_f
+original_df = (1 / np.amax(np.real(original_df))) * original_df
 ########################################################################################################################
 #                                                   PLOTTING
 ########################################################################################################################
@@ -285,27 +287,28 @@ plt.show()
 
 fig, ax = plt.subplots(2, 3, figsize=(12, 10))
 
-ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)), cmap='Blues')
+ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)), cmap='Reds')
 ax[0, 0].set_title('Ex')
 ax[0, 0].pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
 ax[0, 0].plot(x[x_obs_index], y[y_obs_index], 'ro')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(np.real(Ey)), cmap='Blues')
+ax[0, 1].pcolormesh(x, y, np.transpose(np.real(Ey)), cmap='Reds')
 ax[0, 1].set_title('Ey')
 ax[0, 1].pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
 ax[0, 1].plot(x[x_obs_index], y[y_obs_index], 'ro')
 
 ax[0, 2].plot(blocks_added, intensity_ratio_obs_obs)
-ax[0, 2].set_title('Growth of intensity relative to the value at t0; I(t)/I(t0).')
+ax[0, 2].set_title('Growth of intensity relative to the initial value; I/I0.')
 
 i = 0
 
 for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2]],
                         [e_squared, e_squared_a, delta_f],
-                        ['E field Intensity', 'Adjoint field intensity', "Merit Function"]):
+                        ['E field Intensity', 'Adjoint field intensity',
+                         "Derivative of the Merit Function"]):
     S_ax = ax.pcolormesh(x, y, np.transpose(Si), alpha=1, vmin=0, vmax=1)
     ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
-    ax.pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
+    # ax.pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
     ax.set_title(name)
     cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
     fig.colorbar(S_ax, cax=cbar_ax)

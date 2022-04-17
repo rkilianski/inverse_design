@@ -89,7 +89,7 @@ def install_function(axes, fun):
     fun = fun(xx, yy)
     c = int(len(x) / 4)
     d = 3 * c
-    fun = reduce_volume(fun, c, d)
+    # fun = reduce_volume(fun, c, d)
     return fun
 
 
@@ -97,7 +97,7 @@ def df_point(old_field_arr, adj_field_arr, fun):
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr
     intensity = get_intensity(old_field_arr)
-    d_func = 2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - fun)
+    d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - fun)
     return d_func
 
 

@@ -74,32 +74,32 @@ for i in range(9):
 
 fig, ax = plt.subplots(3, 3, figsize=(12, 12))
 
-ax[0, 0].pcolormesh(x, y, np.transpose(plots_2D[0]), cmap='Spectral', alpha=1)
+ax[0, 0].pcolormesh(x, y, plots_2D[0], cmap='Spectral', alpha=1)
 ax[0, 0].set_title('TEM00')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(plots_2D[1]), cmap='Spectral', alpha=1)
+ax[0, 1].pcolormesh(x, y, plots_2D[1], cmap='Spectral', alpha=1)
 ax[0, 1].set_title('TEM01')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(plots_2D[2]), cmap='Spectral', alpha=1)
+ax[0, 2].pcolormesh(x, y, plots_2D[2], cmap='Spectral', alpha=1)
 ax[0, 2].set_title('TEM02')
 
-ax[0, 0].pcolormesh(x, y, np.transpose(plots_2D[3]), cmap='Spectral', alpha=1)
-ax[0, 0].set_title('TEM10')
+ax[1, 0].pcolormesh(x, y, plots_2D[3], cmap='Spectral', alpha=1)
+ax[1, 0].set_title('TEM10')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(plots_2D[4]), cmap='Spectral', alpha=1)
-ax[0, 1].set_title('TEM11')
+ax[1, 1].pcolormesh(x, y, plots_2D[4], cmap='Spectral', alpha=1)
+ax[1, 1].set_title('TEM11')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(plots_2D[5]), cmap='Spectral', alpha=1)
-ax[0, 2].set_title('TEM12')
+ax[1, 2].pcolormesh(x, y, plots_2D[5], cmap='Spectral', alpha=1)
+ax[1, 2].set_title('TEM12')
 
-ax[0, 0].pcolormesh(x, y, np.transpose(plots_2D[6]), cmap='Spectral', alpha=1)
-ax[0, 0].set_title('TEM20')
+ax[2, 0].pcolormesh(x, y, plots_2D[6], cmap='Spectral', alpha=1)
+ax[2, 0].set_title('TEM20')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(plots_2D[7]), cmap='Spectral', alpha=1)
-ax[0, 1].set_title('TEM21')
+ax[2, 1].pcolormesh(x, y, plots_2D[7], cmap='Spectral', alpha=1)
+ax[2, 1].set_title('TEM21')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(plots_2D[8]), cmap='Spectral', alpha=1)
-ax[0, 2].set_title('TEM22')
+ax[2, 2].pcolormesh(x, y, plots_2D[8], cmap='Spectral', alpha=1)
+ax[2, 2].set_title('TEM22')
 
 
 plt.show()

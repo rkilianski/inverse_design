@@ -5,13 +5,13 @@ import module_hg_beam as mhg
 from matplotlib import pyplot as plt, animation
 
 #  Slice of the 3D data to plot the results it in 2D
-SLICE_AXIS = 1
-CHOSEN_POINT = 0
+SLICE_AXIS = 2
+CHOSEN_POINT = 20
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 5
-T = 30
+ITERATIONS = 50
+T = 80
 
 pixel_size = 1 / RESOLUTION
 MULTIPLIER = 2  # must be an int !
@@ -34,8 +34,8 @@ geom_list = []
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 
-# # Vertices of the area to be optimised ,[x0,xn,y0,yn,z0] s.t. area of (xn-x0)*(yn-y0) at level z0
-flux_area = [0, 2, 0, 2, -2]
+# # Vertices of the area to be optimised ,[x0,xn,y0,z0,zn] s.t. area of (xn-x0)*(zn-z0) at level y0
+flux_area = [-0.2, 0.2, -3, -0.2, 0.2]
 
 # #  HG beam parameters
 M, N = 0, 0
@@ -93,8 +93,6 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     old_field = inv.get_fields(sim, obs_vol)
     old_field = (1 / (np.amax(old_field))) * old_field
 
-
-
     # Recording a snapshot of 2D intensity pattern for animation
     intensity_2D = inv.get_intensity(inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index))
 
@@ -123,9 +121,9 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
 
     delta_f = inv.df(old_field, adjoint_field)
 
-########################################################################################################################
-# SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
-########################################################################################################################
+    ########################################################################################################################
+    # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
+    ########################################################################################################################
 
     inv.exclude_points([x, y, z], [x_src_index, y_src_index, z_src_index], points_to_delete)
 
@@ -161,7 +159,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         intensity_anim.append(intensity_2D_blocks)
 
         # Recording the average intensity at the area of interest
-        avg_intensity.append(inv.intensity_avg_area(old_field, flux_indices))
+        avg_intensity.append(inv.intensity_avg_area([x, y, z], old_field, flux_indices))
 
         # Adjoint source/s
         dipole_at_obs = inv.produce_adjoint_area(old_field, ft_freq, adj_dt, [x, y, z], flux_indices)
@@ -241,27 +239,27 @@ larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
 grid = inv.cubify(larger_blocks, [x, y, z])
 
 fig = plt.figure()
-ax = fig.add_subplot(2, 2, 1)
+ax = fig.add_subplot(3, 2, 1)
 ax.pcolormesh(x, y, np.transpose(np.real(merit_function)))
 ax.set_title('dF')
 
-ax = fig.add_subplot(2, 2, 2)
+ax = fig.add_subplot(3, 2, 2)
 ax.pcolormesh(x, y, np.transpose(e_squared))
 ax.set_title('Intensity.')
 
-# ax = fig.add_subplot(3, 2, 3)
-# ax.pcolormesh(x, y, np.transpose(np.real(e_squared_adj)))
-# ax.set_title('Adjoint field intensity')
-#
-# ax = fig.add_subplot(3, 2, 4)
-# ax.pcolormesh(x, y, np.transpose(np.real(e_squared)))
-# ax.set_title(f'intensity')
+ax = fig.add_subplot(3, 2, 3)
+ax.pcolormesh(x, y, np.transpose(np.real(e_squared_adj)))
+ax.set_title('Adjoint field intensity')
 
-ax = fig.add_subplot(2, 2, 3)
+ax = fig.add_subplot(3, 2, 4)
+ax.pcolormesh(x, y, np.transpose(intensity_a[-1]))
+ax.set_title(f'Intensity and the shadow of a structure, slicing by y-axis ')
+
+ax = fig.add_subplot(3, 2, 5)
 ax.plot(blocks_added, intensity_averages)
 ax.set_title(f'Intensity average. Improvement of {round(intensity_averages[-1] / intensity_averages[0], 4)}.')
 
-ax = fig.add_subplot(2, 2, 4, projection='3d')
+ax = fig.add_subplot(3, 2, 6, projection='3d')
 ax.set_title(f"3D structure optimizing intensity.")
 ax = ax.voxels(grid, edgecolor='k')
 

@@ -50,14 +50,14 @@ def intensity_at_point(field, x_index, y_index, z_index):
     return intensity_at_x0
 
 
-def intensity_avg_area(field, flux_indices):
-    xi, xn, yi, yn, zi = flux_indices
-    k = zi
+def intensity_avg_area(axes, field, flux_indices):
+    x, y, z = axes
+    xi, xn, y0, zi, zn = flux_indices
     total = 0
-    area = (xn - xi) * (yn - yi)
+    area = (x[xn] - x[xi]) * (z[zn] - z[zi])
     for i in range(xi, xn):
-        for j in range(yi, yn):
-            total += intensity_at_point(field, i, j, k)
+        for j in range(zi, zn):
+            total += intensity_at_point(field, i, y0, j)
 
     return round(total / area, 4)
 
@@ -185,16 +185,18 @@ def produce_adjoint_volume(field, freq, dt, arr_coord):
 def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
     source_area = []
     x_ax, y_ax, z_ax = arr_coord
-    x0, xn, y0, yn, z0 = flux_params
+    x0, xn, y0, z0, zn = flux_params
+    print(flux_params, x_ax[x0], x_ax[xn], y_ax[x0], y_ax[xn], z_ax[z0])
     for i in range(x0, xn):
-        for j in range(y0, yn):
+        for j in range(z0, zn):
             for element in range(3):
+                print("Source point", x_ax[i], z_ax[j])
                 source_area.append(mp.Source(
                     mp.ContinuousSource(freq, width=dt, is_integrated=True),
                     component=[mp.Ex, mp.Ey, mp.Ez][element],
                     size=mp.Vector3(),
-                    center=mp.Vector3(x_ax[i], y_ax[j], z_ax[z0]),
-                    amplitude=np.conjugate(field[element][i, j, z0])))
+                    center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
+                    amplitude=np.conjugate(field[element][i, y0, j])))
     return source_area
 
 
