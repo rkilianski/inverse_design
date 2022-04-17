@@ -197,6 +197,7 @@ def pick_max(delta):
     return x[max_x], y[max_y]
 
 
+delta_f[x_obs_index:, :] = np.zeros((len(x) - x_obs_index, len(y)))
 x_inclusion, y_inclusion = pick_max(delta_f)
 
 x_points.append(x_inclusion)
