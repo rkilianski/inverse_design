@@ -7,21 +7,21 @@ DPML = 2  # thickness of perfectly matched layers (PMLs) around the box
 PML_LAYERS = [mp.PML(DPML)]
 DT = 5
 T = 100
-FCEN = 2 / np.pi
-ITERATIONS = 10
+FCEN = 5 / np.pi
+ITERATIONS = 20
 
-OBS_X_A, OBS_Y_A = 10, 10  # dimensions of the computational cell, not including PML
+OBS_X_A, OBS_Y_A = 6, 6  # dimensions of the computational cell, not including PML
 OBS_VOL = mp.Vector3(OBS_X_A, OBS_Y_A)
-CELL_X, CELL_Y = 20, 20
+CELL_X, CELL_Y = 8, 8
 CELL = mp.Vector3(CELL_X + 2 * DPML, CELL_Y + 2 * DPML)
 
 SOURCE_POSITION_X, SOURCE_POSITION_Y = -OBS_X_A / 2, 0
-OBS_POSITION_X, OBS_POSITION_Y = 0, 0
+OBS_POSITION_X, OBS_POSITION_Y = 1.5, -OBS_Y_A
 
 MATERIAL = mp.Medium(epsilon=1)
 OMEGA = np.pi  # angular frequency of emitter
 
-RESOLUTION = 8
+RESOLUTION = 10
 PIXEL_SIZE = 1 / RESOLUTION
 BLOCK_SIZE = 3 * PIXEL_SIZE
 GEOMETRY = []
@@ -133,6 +133,9 @@ y_obs_index = find_nearest(y, OBS_POSITION_Y)
 x_src_index = find_nearest(x, SOURCE_POSITION_X)
 y_src_index = find_nearest(y, SOURCE_POSITION_Y)
 
+origin_x = find_nearest(x, 0)
+origin_y = find_nearest(y, 0)
+
 DIPOLE_AT_OBS = produce_adjoint_field(old_field)
 
 sim_adjoint = mp.Simulation(
@@ -177,7 +180,7 @@ def exclude_points():
                 points.append((x_index, y_index))
 
 
-exclude_points()
+# exclude_points()
 
 
 def delete_existing(arr):
@@ -197,7 +200,9 @@ def pick_max(delta):
     return x[max_x], y[max_y]
 
 
-delta_f[x_obs_index:, :] = np.zeros((len(x) - x_obs_index, len(y)))
+delta_f[origin_x:, :] = np.zeros((len(x) - origin_x, len(y)))
+delta_f[:5, :] = np.zeros((5, len(y)))
+
 x_inclusion, y_inclusion = pick_max(delta_f)
 
 x_points.append(x_inclusion)
@@ -249,7 +254,8 @@ for i in range(ITERATIONS):
     intensity_at_source.append(intensity_at_point(old_field, x_src_index, y_src_index))
     #  Calculating the merit function df
     delta_f = df(old_field, adjoint_field)
-    delta_f[x_obs_index:, :] = np.zeros((len(x) - x_obs_index, len(y)))
+    delta_f[origin_x:, :] = np.zeros((len(x) - origin_x, len(y)))
+    # delta_f[x_obs_index:, :] = np.zeros((len(x) - x_obs_index, len(y)))
     delta_f[:5, :] = np.zeros((5, len(y)))
     #  picking the coordinates corresponding to the highest change in df
     x1, y1 = pick_max(delta_f)
@@ -283,28 +289,29 @@ plt.show()
 
 fig, ax = plt.subplots(2, 3, figsize=(12, 10))
 
-ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)))
+ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)), cmap='Blues')
 ax[0, 0].set_title('Ex')
 ax[0, 0].pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
-ax[0, 0].plot(x[x_obs_index], y[y_obs_index], 'ro')
+ax[0, 0].plot(x[x_obs_index], y[y_obs_index], 'go')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(np.real(Ey)))
+ax[0, 1].pcolormesh(x, y, np.transpose(np.real(Ey)), cmap='Blues')
 ax[0, 1].set_title('Ey')
 ax[0, 1].pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
-ax[0, 1].plot(x[x_obs_index], y[y_obs_index], 'ro')
+ax[0, 1].plot(x[x_obs_index], y[y_obs_index], 'go')
 
 # ax[0,1].plot(blocks_added, intensity_ratio_obs_obs)
 # ax[0, 1].set_title('(I at obs)/(I at obs at t=0) after adding a block')
 
-ax[0, 2].plot(blocks_added, intensity_at_obs)
-ax[0, 2].set_title('Intensity after adding a block')
+ax[0, 2].plot(blocks_added, intensity_ratio_obs_obs)
+ax[0, 2].set_title('Growth of intensity relative to the value at t0; I(t)/I(t0).')
 
 i = 0
 
 for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2]],
                         [e_squared, e_squared_a, delta_f],
                         ['E field Intensity', 'Adjoint field intensity', "Merit Function"]):
-    S_ax = ax.pcolormesh(x, y, np.transpose(Si), cmap='RdYlBu')
+    S_ax = ax.pcolormesh(x, y, np.transpose(Si), alpha=1, vmin=0, vmax=1)
+    ax.plot(x[x_obs_index], y[y_obs_index], 'ro')
     ax.pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
     ax.set_title(name)
     cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
