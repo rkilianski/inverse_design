@@ -140,7 +140,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
 
     delta_f = inv.df_helicity(old_field, old_field_h, adjoint_field, fun_pattern)
     print(delta_f.shape)
-    delta_f = inv.normalise_complex_field(delta_f)
+    delta_f = inv.normalise_complex_field(delta_f,False)
     print("delta f max", np.amax(delta_f))
     ########################################################################################################################
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
@@ -205,7 +205,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
 
         delta_f = inv.df_helicity(old_field, old_field_h, adjoint_field, fun_pattern)
         print(delta_f.shape)
-        delta_f = inv.normalise_complex_field(delta_f)
+        delta_f = inv.normalise_complex_field(delta_f, False)
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
