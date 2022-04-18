@@ -24,14 +24,15 @@ def reduce_volume(fun, endpoint, startpoint):
     return fun
 
 
-def install_function(axes, fun):
+def install_function(axes, fun, reduced_vol=False):
     """Returns user defined function on a grid chosen by meep."""
     x, y, z = axes
     xx, yy, zz = np.meshgrid(x, y, z)
     fun = fun(xx, yy)
-    c = int(len(x) / 4)
-    d = 3 * c
-    fun = reduce_volume(fun, c, d)
+    if reduced_vol:
+        c = int(len(x) / 4)
+        d = 3 * c
+        fun = reduce_volume(fun, c, d)
     return fun
 
 
@@ -62,6 +63,14 @@ def intensity_avg_area(axes, field, flux_indices):
     return round(total / area, 4)
 
 
+def get_helicity(arr_e, arr_h):
+    ex, ey, ez, eps = arr_e
+    hx, hy, hz = arr_h
+    helicity = np.imag(ex * np.conjugate(hx) + ey * np.conjugate(hy) + ez * np.conjugate(hz))
+    norm_h = (1 / (np.amax(helicity))) * helicity
+    return norm_h
+
+
 def get_fields(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point):
     """If boolean fields_2D is True(default is False), slice axis and point need to be specified."""
     fields_data = np.array([simulation.get_array(center=mp.Vector3(), size=obs_vol, component=field) for field in
@@ -72,8 +81,25 @@ def get_fields(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point
         fields_data_elements = [[a[which_point, :, :], a[:, which_point, :], a[:, :, which_point]][slice_axis]
                                 for a
                                 in fields_data_elements]
+
+    norm_field = (1 / (np.amax(fields_data_elements))) * fields_data_elements
     # ex,ey,ez,epsilon
-    return fields_data_elements
+    return norm_field
+
+
+def get_fields_h(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point):
+    """If boolean fields_2D is True(default is False), slice axis and point need to be specified."""
+    fields_data = np.array([simulation.get_array(center=mp.Vector3(), size=obs_vol, component=field) for field in
+                            [mp.Hx, mp.Hy, mp.Hz]])
+    fields_data_elements = np.array([element[1:-1, 1:-1, 1:-1] for element in fields_data])
+    if fields_2D:
+        slice_axis, which_point = slice_axis_and_which_point
+        fields_data_elements = [[a[which_point, :, :], a[:, which_point, :], a[:, :, which_point]][slice_axis]
+                                for a
+                                in fields_data_elements]
+    # ex,ey,ez,epsilon
+    norm_field = (1 / (np.amax(fields_data_elements))) * fields_data_elements
+    return norm_field
 
 
 def exclude_points(arr_axes, arr_src, points_list):
@@ -114,6 +140,14 @@ def df_point(old_field_arr, adj_field_arr, fun):
     return d_func
 
 
+def df_helicity(old_field_arr_e, old_field_arr_h, adj_field_arr, fun):
+    e1, e2, e3, eps1 = old_field_arr_e
+    a1, a2, a3, eps2 = adj_field_arr
+    helicity = get_helicity(old_field_arr_e, old_field_arr_h)
+    d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (helicity - fun)
+    return d_func
+
+
 def delete_existing(arr, lst, dim_3D=True, multi=1):
     """multi is the multiplier applied to block size,
     it is only used in 2D projection to adjust the size of inclusions for animation."""
@@ -145,7 +179,7 @@ def pick_extremum(delta, lst):
     """Returns a tuple of points (x,y,z) corresponding to the highest value of the dF."""
     if len(lst) > 0:
         delta = delete_existing(delta, lst)
-    extr_x, extr_y, extr_z = np.unravel_index(delta.argmax(), delta.shape)
+    extr_x, extr_y, extr_z = np.unravel_index(delta.argmin(), delta.shape)
     return extr_x, extr_y, extr_z
 
 
@@ -176,6 +210,38 @@ def produce_adjoint_volume(field, freq, dt, arr_coord):
                     source_volume.append(mp.Source(
                         mp.ContinuousSource(freq, width=dt, is_integrated=True),
                         component=[mp.Ex, mp.Ey, mp.Ez][element],
+                        size=mp.Vector3(),
+                        center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
+                        amplitude=np.conjugate(field[element][i, j, k])))
+    return source_volume
+
+
+def produce_electric_dipole(field, freq, dt, arr_coord):
+    source_volume = []
+    x_ax, y_ax, z_ax = arr_coord
+    for i in range(len(x_ax)):
+        for j in range(len(y_ax)):
+            for k in range(len(z_ax)):
+                for element in range(3):
+                    source_volume.append(mp.Source(
+                        mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                        component=[mp.Ex, mp.Ey, mp.Ez][element],
+                        size=mp.Vector3(),
+                        center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
+                        amplitude=np.conjugate(field[element][i, j, k])))
+    return source_volume
+
+
+def produce_magnetic_dipole(field, freq, dt, arr_coord):
+    source_volume = []
+    x_ax, y_ax, z_ax = arr_coord
+    for i in range(len(x_ax)):
+        for j in range(len(y_ax)):
+            for k in range(len(z_ax)):
+                for element in range(3):
+                    source_volume.append(mp.Source(
+                        mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                        component=[mp.Hx, mp.Hy, mp.Hz][element],
                         size=mp.Vector3(),
                         center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
                         amplitude=np.conjugate(field[element][i, j, k])))
