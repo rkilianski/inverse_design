@@ -101,7 +101,9 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
 
     # Simulate a field and use its values at obs points to simulate a fictitious field - adjoint field.
     old_field = inv.get_fields(sim, obs_vol)
+    old_field_n = (1 / (np.amax(old_field))) * old_field
     old_field_h = inv.get_fields_h(sim, obs_vol)
+    old_field_h_n = (1 / (np.amax(old_field_h))) * old_field_h
 
     # Recording a snapshot of 2D intensity pattern for animation
     e_fields_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
@@ -113,8 +115,8 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     helicity_anim.append(helicity_2D_blocks)
 
     # Exciting fictitious dipoles e, and h for the adjoint field
-    dipole_e = inv.produce_electric_dipole(old_field_h, ft_freq, adj_dt, [x, y, z])
-    dipole_h = inv.produce_magnetic_dipole(old_field, ft_freq, adj_dt, [x, y, z])
+    dipole_e = inv.produce_electric_dipole(old_field_h_n, ft_freq, adj_dt, [x, y, z])
+    dipole_h = inv.produce_magnetic_dipole(old_field_n, ft_freq, adj_dt, [x, y, z])
     dipoles_at_obs = np.concatenate((dipole_e, dipole_h))
 
     sim_adjoint = mp.Simulation(
@@ -162,7 +164,9 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         sim.run(until=time)
 
         old_field = inv.get_fields(sim, obs_vol)
+        old_field_n = (1 / (np.amax(old_field))) * old_field
         old_field_h = inv.get_fields_h(sim, obs_vol)
+        old_field_h_n = (1 / (np.amax(old_field_h))) * old_field_h
 
         # Recording a snapshot of 2D intensity pattern for animation
         e_fields_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
@@ -173,8 +177,8 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         helicity_2D_blocks = inv.delete_existing(helicity_2D, points_for_3D_plot, False, multiplier)
         helicity_anim.append(helicity_2D_blocks)
 
-        dipole_e = inv.produce_electric_dipole(old_field_h, ft_freq, adj_dt, [x, y, z])
-        dipole_h = inv.produce_magnetic_dipole(old_field, ft_freq, adj_dt, [x, y, z])
+        dipole_e = inv.produce_electric_dipole(old_field_h_n, ft_freq, adj_dt, [x, y, z])
+        dipole_h = inv.produce_magnetic_dipole(old_field_n, ft_freq, adj_dt, [x, y, z])
         dipoles_at_obs = np.concatenate((dipole_e, dipole_h))
 
         sim_adjoint = mp.Simulation(
