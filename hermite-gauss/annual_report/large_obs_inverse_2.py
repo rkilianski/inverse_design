@@ -5,14 +5,12 @@ import numpy as np
 # **********************************************************************************************************************
 # UTILITY FUNCTIONS
 # **********************************************************************************************************************
-def normalise_complex_field(arr, four_comp=True):
-    if four_comp:
-        f1, f2, f3, f4 = arr
-    else:
-        f1, f2, f3 = arr
-    field = np.array([f1, f2, f3])
-    norm = np.sqrt(np.real(f1 * np.conjugate(f1) + f2 * np.conjugate(f2) + f3 * np.conjugate(f3)))
-    return field / norm
+def normalise_fun(arr):
+    """Returns the array normalised on [-1,1]."""
+    low = np.amin(arr)
+    high = np.amax(arr)
+    f = lambda x: (2 * (x - low) / (high - low)) - 1
+    return f(arr)
 
 
 def find_nearest(array, value):
@@ -152,7 +150,7 @@ def df_point(old_field_arr, adj_field_arr, fun):
 def df_helicity(old_field_arr_e, old_field_arr_h, adj_field_arr, fun):
     e1, e2, e3, eps1 = old_field_arr_e
     a1, a2, a3 = adj_field_arr
-    helicity = get_helicity(old_field_arr_e, old_field_arr_h)
+    helicity = normalise_fun(get_helicity(old_field_arr_e, old_field_arr_h))
     d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (helicity - fun)
     return d_func
 
