@@ -281,13 +281,13 @@ plt.rcParams["figure.figsize"] = [6.00, 6.00]
 plt.rcParams["figure.autolayout"] = True
 fig_a, ax_a = plt.subplots()
 
-intns = ax_a.pcolormesh(x, y, np.transpose(intensity_a[0]))
+intns = ax_a.pcolormesh(x, y, np.transpose(helicity_a[0]))
 
 fig_a.colorbar(intns)
 
 
 def animate(i):
-    intns.set_array(np.transpose(intensity_a[i][:, :]).flatten())
+    intns.set_array(np.transpose(helicity_a[i][:, :]).flatten())
     ax_a.set_title(f"Animation of Intensity pattern")
 
 
