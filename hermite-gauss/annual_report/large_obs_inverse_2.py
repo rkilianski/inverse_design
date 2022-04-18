@@ -67,9 +67,9 @@ def intensity_avg_area(axes, field, flux_indices):
 def get_helicity(arr_e, arr_h):
     ex, ey, ez, eps = arr_e
     hx, hy, hz = arr_h
-    helicity = np.imag(ex * np.conjugate(hx) + ey * np.conjugate(hy) + ez * np.conjugate(hz))
-    norm_h = (1 / (np.amax(helicity))) * helicity
-    return norm_h
+    norm = 1 / np.real(ex * np.conjugate(ex) + ey * np.conjugate(ey) + ez * np.conjugate(ez))
+    helicity = np.imag(norm * (ex * np.conjugate(hx) + ey * np.conjugate(hy) + ez * np.conjugate(hz)))
+    return helicity
 
 
 def get_fields(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point):
