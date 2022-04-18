@@ -101,10 +101,11 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
 
     # Simulate a field and use its values at obs points to simulate a fictitious field - adjoint field.
     old_field = inv.get_fields(sim, obs_vol)
-    old_field_n = (1 / (np.amax(old_field))) * old_field
+    old_field_n = inv.normalise_complex_field(old_field)
+    print("old field max",np.amax(old_field_n))
     old_field_h = inv.get_fields_h(sim, obs_vol)
-    old_field_h_n = (1 / (np.amax(old_field_h))) * old_field_h
-
+    old_field_h_n = inv.normalise_complex_field(old_field_h)
+    print("old field_h max", np.amax(old_field_h_n))
     # Recording a snapshot of 2D intensity pattern for animation
     e_fields_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
     h_fields_2D = inv.get_fields_h(sim, obs_vol, True, slice_axis, z_obs_index)
@@ -133,9 +134,12 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     sim_adjoint.run(until=time)
 
     adjoint_field = inv.get_fields(sim_adjoint, obs_vol)
+    adjoint_field = inv.normalise_complex_field(adjoint_field)
+
     print("adjoint max", np.amax(adjoint_field))
 
     delta_f = inv.df_helicity(old_field, old_field_h, adjoint_field, fun_pattern)
+    delta_f = inv.normalise_complex_field(delta_f)
     print("delta f max", np.amax(delta_f))
     ########################################################################################################################
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
@@ -165,15 +169,15 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         sim.run(until=time)
 
         old_field = inv.get_fields(sim, obs_vol)
-        old_field_n = (1 / (np.amax(old_field))) * old_field
+        old_field_n = inv.normalise_complex_field(old_field)
         old_field_h = inv.get_fields_h(sim, obs_vol)
-        old_field_h_n = (1 / (np.amax(old_field_h))) * old_field_h
+        old_field_h_n = inv.normalise_complex_field(old_field_h)
 
         # Recording a snapshot of 2D intensity pattern for animation
         e_fields_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
         h_fields_2D = inv.get_fields_h(sim, obs_vol, True, slice_axis, z_obs_index)
         helicity_2D = inv.get_helicity(e_fields_2D, h_fields_2D)
-        print("helicity 2D max", np.amax(adjoint_field))
+        print("helicity 2D max", np.amax(helicity_2D))
         # Deleting grid points where blocks have been placed
         helicity_2D_blocks = inv.delete_existing(helicity_2D, points_for_3D_plot, False, multiplier)
         helicity_anim.append(helicity_2D_blocks)
@@ -196,8 +200,10 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         sim_adjoint.run(until=time)
 
         adjoint_field = inv.get_fields(sim_adjoint, obs_vol)
+        adjoint_field = inv.normalise_complex_field(adjoint_field)
 
         delta_f = inv.df_helicity(old_field, old_field_h, adjoint_field, fun_pattern)
+        delta_f = inv.normalise_complex_field(delta_f)
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 

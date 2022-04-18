@@ -5,6 +5,11 @@ import numpy as np
 # **********************************************************************************************************************
 # UTILITY FUNCTIONS
 # **********************************************************************************************************************
+def normalise_complex_field(arr):
+    f1, f2, f3, f4 = arr
+    field = np.array([f1, f2, f3])
+    norm = np.sqrt(np.real(f1 * np.conjugate(f1) + f2 * np.conjugate(f2) + f3 * np.conjugate(f3)))
+    return field / norm
 
 
 def find_nearest(array, value):
@@ -66,7 +71,7 @@ def intensity_avg_area(axes, field, flux_indices):
 
 def get_helicity(arr_e, arr_h):
     ex, ey, ez, eps = arr_e
-    hx, hy, hz = arr_h
+    hx, hy, hz, eps_h = arr_h
     # norm = 1 / np.real(ex * np.conjugate(ex) + ey * np.conjugate(ey) + ez * np.conjugate(ez))
     norm = 1
     helicity = np.imag(norm * (ex * np.conjugate(hx) + ey * np.conjugate(hy) + ez * np.conjugate(hz)))
@@ -91,7 +96,7 @@ def get_fields(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point
 def get_fields_h(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point):
     """If boolean fields_2D is True(default is False), slice axis and point need to be specified."""
     fields_data = np.array([simulation.get_array(center=mp.Vector3(), size=obs_vol, component=field) for field in
-                            [mp.Hx, mp.Hy, mp.Hz]])
+                            [mp.Hx, mp.Hy, mp.Hz,mp.Dielectric]])
     fields_data_elements = np.array([element[1:-1, 1:-1, 1:-1] for element in fields_data])
     if fields_2D:
         slice_axis, which_point = slice_axis_and_which_point
