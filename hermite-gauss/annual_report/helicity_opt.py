@@ -10,7 +10,7 @@ CHOSEN_POINT = 0
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 2
+ITERATIONS = 1
 T = 30
 
 pixel_size = 1 / RESOLUTION
@@ -37,7 +37,7 @@ src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 # #  HG beam parameters
 M, N = 0, 0
 WAVELENGTH = 1
-WAIST = 1
+WAIST = 2
 DT = 5
 
 freq = 1 / WAVELENGTH
@@ -133,12 +133,13 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     sim_adjoint.run(until=time)
 
     adjoint_field = inv.get_fields(sim_adjoint, obs_vol)
+    print("adjoint max", np.amax(adjoint_field))
 
     delta_f = inv.df_helicity(old_field, old_field_h, adjoint_field, fun_pattern)
-
-########################################################################################################################
-# SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
-########################################################################################################################
+    print("delta f max", np.amax(delta_f))
+    ########################################################################################################################
+    # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
+    ########################################################################################################################
 
     inv.exclude_points([x, y, z], [x_src_index, y_src_index, z_src_index], points_to_delete)
 
@@ -172,7 +173,7 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         e_fields_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
         h_fields_2D = inv.get_fields_h(sim, obs_vol, True, slice_axis, z_obs_index)
         helicity_2D = inv.get_helicity(e_fields_2D, h_fields_2D)
-
+        print("helicity 2D max", np.amax(adjoint_field))
         # Deleting grid points where blocks have been placed
         helicity_2D_blocks = inv.delete_existing(helicity_2D, points_for_3D_plot, False, multiplier)
         helicity_anim.append(helicity_2D_blocks)
