@@ -148,7 +148,7 @@ def df_point(old_field_arr, adj_field_arr, fun):
 
 def df_helicity(old_field_arr_e, old_field_arr_h, adj_field_arr, fun):
     e1, e2, e3, eps1 = old_field_arr_e
-    a1, a2, a3, eps2 = adj_field_arr
+    a1, a2, a3 = adj_field_arr
     helicity = get_helicity(old_field_arr_e, old_field_arr_h)
     d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (helicity - fun)
     return d_func
