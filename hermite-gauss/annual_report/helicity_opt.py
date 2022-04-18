@@ -37,7 +37,7 @@ src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 # #  HG beam parameters
 M, N = 0, 0
 WAVELENGTH = 1
-WAIST = 2
+WAIST = 1
 DT = 5
 
 freq = 1 / WAVELENGTH
@@ -214,9 +214,9 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     df_2D = delta_f[:, :, z_obs_index]
     fun_2D = fun_pattern[:, :, z_obs_index]
     axes = [x, y, z]
-    intensities = [helicity_anim]
+    animation_frames = helicity_anim
 
-    return axes, forward_2D_e, forward_2D_h, adjoint_2D, df_2D, fun_2D, intensities
+    return axes, forward_2D_e, forward_2D_h, adjoint_2D, df_2D, fun_2D, animation_frames
 
 
 # ***************************************** CREATING A BEAM ************************************************************
@@ -238,7 +238,7 @@ Ex, Ey, Ez, eps = forward_field_e
 Hx, Hy, Hz = forward_field_h
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
 
-intensity_a = intensities
+helicity_a = intensities
 
 pattern = fun_2D
 merit_function = df_2D
