@@ -54,12 +54,18 @@ components = [mp.Ex, mp.Ey, mp.Ez]
 
 
 # ***************************************** HELICITY PATTERN **********************************************************
+#
+# def fun(u, v):
+#     function = np.cos(4 * (u + v)) + np.cos(4 * (u - v))
+#     norm_fun = 1 / np.amax(function)
+#     return norm_fun * function
 
 def fun(u, v):
-    function = np.cos(4 * (u + v)) + np.cos(4 * (u - v))
-    norm_fun = 1 / np.amax(function)
-    return norm_fun * function
-
+    # rotated helicity-3 wave
+    function = -2.0000174792 * np.sin(1.41422 * v) - 2.0000174792 * np.sin(1.22475 * u - 0.70711 * v) \
+                       + 2.0000174792 * np.sin(1.22475 * u + 0.70711 * v)
+    norm_fun = inv.normalise_fun(function)
+    return norm_fun
 
 # **********************************************************************************************************************
 # SIMULATION FIRST STEP - producing a dipole and obtaining parameters for the sim (meep chosen axes and obs points)
@@ -239,7 +245,7 @@ data = produce_simulation(fun, src_data, blk_data, freq, T, OBS_VOL, src_loc, li
 
 [x, y, z], forward_field_e, forward_field_h, adjoint_field, df_2D, fun_2D, intensities = data
 Ex, Ey, Ez, eps = forward_field_e
-Hx, Hy, Hz = forward_field_h
+Hx, Hy, Hz, eps_h = forward_field_h
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
 
 helicity_a = intensities
