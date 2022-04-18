@@ -5,8 +5,11 @@ import numpy as np
 # **********************************************************************************************************************
 # UTILITY FUNCTIONS
 # **********************************************************************************************************************
-def normalise_complex_field(arr):
-    f1, f2, f3, f4 = arr
+def normalise_complex_field(arr, four_comp=True):
+    if four_comp:
+        f1, f2, f3, f4 = arr
+    else:
+        f1, f2, f3 = arr
     field = np.array([f1, f2, f3])
     norm = np.sqrt(np.real(f1 * np.conjugate(f1) + f2 * np.conjugate(f2) + f3 * np.conjugate(f3)))
     return field / norm
@@ -96,7 +99,7 @@ def get_fields(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point
 def get_fields_h(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point):
     """If boolean fields_2D is True(default is False), slice axis and point need to be specified."""
     fields_data = np.array([simulation.get_array(center=mp.Vector3(), size=obs_vol, component=field) for field in
-                            [mp.Hx, mp.Hy, mp.Hz,mp.Dielectric]])
+                            [mp.Hx, mp.Hy, mp.Hz, mp.Dielectric]])
     fields_data_elements = np.array([element[1:-1, 1:-1, 1:-1] for element in fields_data])
     if fields_2D:
         slice_axis, which_point = slice_axis_and_which_point
