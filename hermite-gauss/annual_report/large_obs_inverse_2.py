@@ -6,6 +6,7 @@ import numpy as np
 # UTILITY FUNCTIONS
 # **********************************************************************************************************************
 
+
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -82,9 +83,8 @@ def get_fields(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point
                                 for a
                                 in fields_data_elements]
 
-    norm_field = (1 / (np.amax(fields_data_elements))) * fields_data_elements
     # ex,ey,ez,epsilon
-    return norm_field
+    return fields_data_elements
 
 
 def get_fields_h(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_point):
@@ -98,8 +98,8 @@ def get_fields_h(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_poi
                                 for a
                                 in fields_data_elements]
     # ex,ey,ez,epsilon
-    norm_field = (1 / (np.amax(fields_data_elements))) * fields_data_elements
-    return norm_field
+
+    return fields_data_elements
 
 
 def exclude_points(arr_axes, arr_src, points_list):
