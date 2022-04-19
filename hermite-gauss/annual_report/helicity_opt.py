@@ -10,7 +10,7 @@ CHOSEN_POINT = 0
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 1
+ITERATIONS = 2
 T = 30
 
 pixel_size = 1 / RESOLUTION
@@ -31,7 +31,7 @@ material = mp.Medium(epsilon=1)
 geom_list = []
 
 # #  Source  points
-SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
+SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0.25, 0
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 
 # #  HG beam parameters
@@ -62,10 +62,10 @@ components = [mp.Ex, mp.Ey, mp.Ez]
 
 def fun(u, v):
     # rotated helicity-3 wave
-    function = -2.0000174792 * np.sin(1.41422 * v) - 2.0000174792 * np.sin(1.22475 * u - 0.70711 * v) \
-                       + 2.0000174792 * np.sin(1.22475 * u + 0.70711 * v)
+    function = -2 * np.sin(6 * (u - v)) + 2 * np.sin(6 * u) - 2 * np.sin(6 * v)
     norm_fun = inv.normalise_fun(function)
     return norm_fun
+
 
 # **********************************************************************************************************************
 # SIMULATION FIRST STEP - producing a dipole and obtaining parameters for the sim (meep chosen axes and obs points)
@@ -102,15 +102,13 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     x_src_index, y_src_index, z_src_index = [inv.find_nearest(i, j) for i, j in
                                              zip([x, y, z], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z])]
     z_obs_index = inv.find_nearest(z, CHOSEN_POINT)
-    # Desired pattern for the sim to achieve
+
+    # Desired helicity pattern for the sim to achieve
     fun_pattern = inv.install_function([x, y, z], fun)
 
     # Simulate a field and use its values at obs points to simulate a fictitious field - adjoint field.
     old_field = inv.get_fields(sim, obs_vol)
-
-    print("old field max", np.amax(old_field))
     old_field_h = inv.get_fields_h(sim, obs_vol)
-    print("old field_h max", np.amax(old_field_h))
 
     # Recording a snapshot of 2D intensity pattern for animation
     e_fields_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
@@ -251,7 +249,7 @@ Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
 helicity_a = intensities
 
 pattern = fun_2D
-merit_function = (1 / np.amax(df_2D)) * df_2D
+merit_function = inv.normalise_fun(df_2D)
 he_squared = inv.get_helicity(forward_field_e, forward_field_h)
 e_squared_adj = inv.get_intensity(adjoint_field)
 

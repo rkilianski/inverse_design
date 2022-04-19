@@ -10,7 +10,7 @@ T = 100
 FCEN = 5 / np.pi
 DF = 0.02  # turn-on bandwidth
 
-ITERATIONS = 100
+ITERATIONS = 200
 
 OBS_X_A, OBS_Y_A = 6, 6  # dimensions of the computational cell, not including PML
 OBS_VOL = mp.Vector3(OBS_X_A, OBS_Y_A)

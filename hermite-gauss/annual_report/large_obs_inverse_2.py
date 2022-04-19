@@ -122,7 +122,7 @@ def exclude_points(arr_axes, arr_src, points_list):
             for z_i in z:
                 src_dist = _delta(x_i, x, x_src_i) + _delta(y_i, y, y_src_i) + _delta(z_i, z, z_src_i)
 
-                if src_dist < 1:
+                if src_dist < 0.1:
                     x_index = np.where(x == x_i)[0][0]
                     y_index = np.where(y == y_i)[0][0]
                     z_index = np.where(z == z_i)[0][0]
@@ -186,7 +186,7 @@ def pick_extremum(delta, lst):
     """Returns a tuple of points (x,y,z) corresponding to the highest value of the dF."""
     if len(lst) > 0:
         delta = delete_existing(delta, lst)
-    extr_x, extr_y, extr_z = np.unravel_index(delta.argmin(), delta.shape)
+    extr_x, extr_y, extr_z = np.unravel_index(delta.argmax(), delta.shape)
     return extr_x, extr_y, extr_z
 
 

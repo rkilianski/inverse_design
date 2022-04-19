@@ -6,11 +6,11 @@ from matplotlib import pyplot as plt, animation
 
 #  Slice of the 3D data to plot the results it in 2D
 SLICE_AXIS = 2
-CHOSEN_POINT = 20
+CHOSEN_POINT = 0
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 50
+ITERATIONS = 200
 T = 80
 
 pixel_size = 1 / RESOLUTION
@@ -23,6 +23,7 @@ radius_squared = block_size ** 2
 DPML = 1
 CELL_X, CELL_Y, CELL_Z = 6, 6, 6  # dimensions of the computational cell, not including PML
 OBS_VOL = mp.Vector3(6, 6, 6)
+# for 3d plotting
 
 sx, sy, sz = CELL_X + 2 * DPML, CELL_Y + 2 * DPML, CELL_Z + 2 * DPML
 cell_3d = mp.Vector3(sx, sy, sz)
@@ -35,7 +36,7 @@ SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 
 # # Vertices of the area to be optimised ,[x0,xn,y0,z0,zn] s.t. area of (xn-x0)*(zn-z0) at level y0
-flux_area = [-0.2, 0.2, -3, -0.2, 0.2]
+flux_area = [2, 3, -3, -0.5, 0.5]
 
 # #  HG beam parameters
 M, N = 0, 0
@@ -253,17 +254,34 @@ ax.set_title('Adjoint field intensity')
 
 ax = fig.add_subplot(3, 2, 4)
 ax.pcolormesh(x, y, np.transpose(intensity_a[-1]))
-ax.set_title(f'Intensity and the shadow of a structure, slicing by y-axis ')
+ax.set_title(f'Intensity and the shadow of a structure, slicing by z-axis ')
 
 ax = fig.add_subplot(3, 2, 5)
 ax.plot(blocks_added, intensity_averages)
 ax.set_title(f'Intensity average. Improvement of {round(intensity_averages[-1] / intensity_averages[0], 4)}.')
 
 ax = fig.add_subplot(3, 2, 6, projection='3d')
-ax.set_title(f"3D structure optimizing intensity.")
+ax.set_title(f"The 3D structure optimizing intensity.")
 ax = ax.voxels(grid, edgecolor='k')
 
 plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
+plt.show()
+
+loc = np.arange(len(x))
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(projection='3d')
+ax2.set_title(
+    f"The 3D structure optimizing intensity, between x:({flux_area[0]},{flux_area[1]}), "
+    f"z:({flux_area[3]},{flux_area[4]} )"
+    f"at y:{flux_area[2]}.")
+ax2.set_xlabel('X')
+ax2.set_ylabel('Y')
+ax2.set_zlabel('Z')
+# ax2.set_xticks(x)
+# ax2.set_yticks(y)
+# ax2.set_zticks(z)
+ax2 = ax2.voxels(grid, edgecolor='k')
+
 plt.show()
 
 plt.rcParams["figure.figsize"] = [6.00, 6.00]
