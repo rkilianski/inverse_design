@@ -6,7 +6,7 @@ import numpy as np
 import module_3d_wave as m3d
 import matplotlib.pyplot as plt
 from meep.materials import fused_quartz
-DPML = 2  # thickness of PML layers
+DPML = 3  # thickness of PML layers
 COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)

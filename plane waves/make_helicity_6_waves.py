@@ -5,11 +5,11 @@ import numpy as np
 import module_3d_wave as m3d
 import matplotlib.pyplot as plt
 
-DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [14, 14, 14]  # dimensions of the computational cell, not including PML
+DPML = 2 # thickness of PML layers
+COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2* DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
-OBS_VOL = mp.Vector3(14, 14, 14)
+OBS_VOL = mp.Vector3(8, 8, 8)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 12
 
@@ -52,7 +52,7 @@ e_vectors = [E1, E2, E3, E4, E5, E6]
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
-T = 20  # run time
+T = 30  # run time
 
 multiple_waves = m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], [COMP_X, COMP_Y, COMP_Z], N)
 
@@ -124,7 +124,7 @@ i = 0
 for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2], ax[2, 0], ax[2, 1], ax[2, 2]],
                         [ESquared, HSquared, helicity_density, S1, S2, S3],
                         ['E field Intensity', 'H field Intensity', "Helicity density", 'S1', 'S2', 'S3']):
-    S_ax = ax.pcolormesh(x, y, np.transpose(Si), vmax=1.25, vmin=-1.25, cmap='RdYlBu')
+    S_ax = ax.pcolormesh(x, y, np.transpose(Si), vmax=1.25, vmin=-1.25, cmap='bwr')
     ax.pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
     ax.set_title(name)
     cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
