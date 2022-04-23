@@ -7,12 +7,12 @@ DPML = 1  # thickness of perfectly matched layers (PMLs) around the box
 PML_LAYERS = [mp.PML(DPML)]
 DT = 5
 T = 100
-FCEN = 5 / np.pi
-ITERATIONS = 100
+FCEN = 2 / np.pi
+ITERATIONS = 10
 
-OBS_X_A, OBS_Y_A = 10, 10  # dimensions of the computational cell, not including PML
+OBS_X_A, OBS_Y_A = 8, 8  # dimensions of the computational cell, not including PML
 OBS_VOL = mp.Vector3(OBS_X_A, OBS_Y_A)
-CELL_X, CELL_Y = 20, 20
+CELL_X, CELL_Y = 10, 10
 CELL = mp.Vector3(CELL_X + 2 * DPML, CELL_Y + 2 * DPML)
 
 SOURCE_POSITION_X, SOURCE_POSITION_Y = -OBS_X_A / 2, 0
@@ -78,7 +78,7 @@ def pw_maker(freq, kDir, pol, srcPos, srcBox, complex_phase=1):
 
 k1 = [1, 0]
 
-sourceLineX = mp.Vector3(0, CELL_Y / 8)
+sourceLineX = mp.Vector3(0, CELL_Y)
 
 # Plane wave source for input wave
 
@@ -125,6 +125,7 @@ def get_fields(simulation, ft):
 
 
 old_field = get_fields(sim, dft_obj)
+old_field = (1/np.amax(old_field))*old_field
 # Simulate a source from the obs point with amplitude of the E field from the observation point
 
 x_obs_index = find_nearest(x, OBS_POSITION_X)
@@ -168,8 +169,8 @@ def add_block(first, second):
 def exclude_points():
     for x_coord in x:
         for y_coord in y:
-            if (x_coord - x[x_obs_index]) ** 2 + (y_coord - y[y_obs_index]) ** 2 < 1 or (
-                    x_coord - x[x_src_index]) ** 2 + (y_coord - y[y_src_index]) ** 2 < 1:
+            if (x_coord - x[x_obs_index]) ** 2 + (y_coord - y[y_obs_index]) ** 2 < 0.5 or (
+                    x_coord - x[x_src_index]) ** 2 + (y_coord - y[y_src_index]) ** 2 < 0.5:
                 x_index = np.where(x == x_coord)[0][0]
                 y_index = np.where(y == y_coord)[0][0]
                 points.append((x_index, y_index))
@@ -291,7 +292,7 @@ i = 0
 for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2]],
                         [e_squared, e_squared_a, delta_f],
                         ['E field Intensity', 'Adjoint field intensity', "Merit Function"]):
-    S_ax = ax.pcolormesh(x, y, np.transpose(Si), vmax=1, vmin=0, cmap='RdYlBu')
+    S_ax = ax.pcolormesh(x, y, np.transpose(Si), cmap='RdYlBu',vmin=0,vmax=1)
     ax.pcolormesh(x, y, np.transpose(np.real(eps_data)), cmap='Greys', alpha=1, vmin=0, vmax=4)
     ax.set_title(name)
     cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])

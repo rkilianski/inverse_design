@@ -76,6 +76,7 @@ def get_helicity(arr_e, arr_h):
     # norm = 1 / np.real(ex * np.conjugate(ex) + ey * np.conjugate(ey) + ez * np.conjugate(ez))
     norm = 1
     helicity = np.imag(norm * (ex * np.conjugate(hx) + ey * np.conjugate(hy) + ez * np.conjugate(hz)))
+    helicity = normalise_fun(helicity)
     return helicity
 
 
@@ -186,7 +187,7 @@ def pick_extremum(delta, lst):
     """Returns a tuple of points (x,y,z) corresponding to the highest value of the dF."""
     if len(lst) > 0:
         delta = delete_existing(delta, lst)
-    extr_x, extr_y, extr_z = np.unravel_index(delta.argmax(), delta.shape)
+    extr_x, extr_y, extr_z = np.unravel_index(delta.argmin(), delta.shape)
     return extr_x, extr_y, extr_z
 
 
@@ -255,14 +256,46 @@ def produce_magnetic_dipole(field, freq, dt, arr_coord):
     return source_volume
 
 
+def produce_electric_dipole_2D(field, freq, dt, arr_coord, obs_point):
+    source_volume = []
+    x_ax, y_ax, z_ax = arr_coord
+    for i in range(len(x_ax)):
+        for j in range(len(y_ax)):
+            for element in range(3):
+                source_volume.append(mp.Source(
+                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                    component=[mp.Ex, mp.Ey, mp.Ez][element],
+                    size=mp.Vector3(),
+                    center=mp.Vector3(x_ax[i], y_ax[j], z_ax[obs_point]),
+                    amplitude=np.conjugate(field[element][i, j, obs_point])))
+    return source_volume
+
+
+def produce_magnetic_dipole_2D(field, freq, dt, arr_coord, obs_point):
+    source_volume = []
+    x_ax, y_ax, z_ax = arr_coord
+    for i in range(len(x_ax)):
+        for j in range(len(y_ax)):
+            for element in range(3):
+                source_volume.append(mp.Source(
+                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                    component=[mp.Hx, mp.Hy, mp.Hz][element],
+                    size=mp.Vector3(),
+                    center=mp.Vector3(x_ax[i], y_ax[j], z_ax[obs_point]),
+                    amplitude=np.conjugate(field[element][i, j, obs_point])))
+    return source_volume
+
+
 def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
     source_area = []
+    source_coords = []
     x_ax, y_ax, z_ax = arr_coord
     x0, xn, y0, z0, zn = flux_params
     print(flux_params, x_ax[x0], x_ax[xn], y_ax[x0], y_ax[xn], z_ax[z0])
     for i in range(x0, xn):
         for j in range(z0, zn):
             for element in range(3):
+                source_coords.append((i, y0, j))
                 print("Source point", x_ax[i], z_ax[j])
                 source_area.append(mp.Source(
                     mp.ContinuousSource(freq, width=dt, is_integrated=True),
@@ -270,7 +303,8 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
                     size=mp.Vector3(),
                     center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
                     amplitude=np.conjugate(field[element][i, y0, j])))
-    return source_area
+    return source_area, source_coords
+
 
 
 def add_block(arr_centre, block_size, geo_lst):
@@ -293,11 +327,13 @@ def add_block(arr_centre, block_size, geo_lst):
 
 def cubify(arr, axes):
     u, v, w = axes
-    cube = False
+    cubes = False
     x_ax, y_ax, z_ax = np.indices((len(u), len(v), len(w)))
+
     for tup in arr:
-        cube |= (x_ax == tup[0]) & (y_ax == tup[1]) & (z_ax == tup[2])
-    return cube
+        cubes |= (x_ax == tup[0]) & (y_ax == tup[1]) & (z_ax == tup[2])
+
+    return cubes
 
 
 def spherify(arr, axes, rad):

@@ -10,7 +10,7 @@ CHOSEN_POINT = 0
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 200
+ITERATIONS = 2
 T = 80
 
 pixel_size = 1 / RESOLUTION
@@ -102,7 +102,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     intensity_anim.append(intensity_2D_blocks)
 
     # Exciting a fictitious dipole for the adjoint field
-    dipole_at_obs = inv.produce_adjoint_area(old_field, ft_freq, adj_dt, [x, y, z], flux_indices)
+    dipole_at_obs = inv.produce_adjoint_area(old_field, ft_freq, adj_dt, [x, y, z], flux_indices)[0]
 
     sim_adjoint = mp.Simulation(
         cell_size=cell_size,
@@ -163,7 +163,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         avg_intensity.append(inv.intensity_avg_area([x, y, z], old_field, flux_indices))
 
         # Adjoint source/s
-        dipole_at_obs = inv.produce_adjoint_area(old_field, ft_freq, adj_dt, [x, y, z], flux_indices)
+        dipole_at_obs = inv.produce_adjoint_area(old_field, ft_freq, adj_dt, [x, y, z], flux_indices)[0]
 
         sim_adjoint = mp.Simulation(
             cell_size=cell_size,
@@ -193,13 +193,17 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
 
         inv.add_block([x_inclusion, y_inclusion, z_inclusion], block_size, geo_lst)
 
+    axes = [x, y, z]
+    src_ind = [(x_src_index, y_src_index, z_src_index)]
+    obs_ind = inv.produce_adjoint_area(old_field, ft_freq, adj_dt, [x, y, z], flux_indices)[1]
+
     forward_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
     adjoint_2D = inv.get_fields(sim_adjoint, obs_vol, True, slice_axis, z_obs_index)
     df_2D = delta_f[:, :, z_obs_index]
-    axes = [x, y, z]
+
     intensities_list = [intensity_anim, avg_intensity]
 
-    return axes, forward_2D, adjoint_2D, df_2D, intensities_list
+    return axes, forward_2D, adjoint_2D, df_2D, intensities_list, src_ind, obs_ind
 
 
 # ***************************************** CREATING A BEAM ************************************************************
@@ -226,7 +230,7 @@ data = produce_simulation(src_data, flux_area, blk_data, freq, T, OBS_VOL, src_l
                           SLICE_AXIS,
                           DT)
 
-[x, y, z], forward_field, adjoint_field, df_2D, intensities = data
+[x, y, z], forward_field, adjoint_field, df_2D, intensities, source, area = data
 
 Ex, Ey, Ez, eps = forward_field
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
@@ -237,7 +241,16 @@ e_squared = inv.get_intensity(forward_field)
 e_squared_adj = inv.get_intensity(adjoint_field)
 
 larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
-grid = inv.cubify(larger_blocks, [x, y, z])
+
+grid_1 = inv.cubify(source, [x, y, z])
+grid_2 = inv.cubify(area, [x, y, z])
+grid_3 = inv.cubify(larger_blocks, [x, y, z])
+
+voxel_array = grid_1 | grid_2 | grid_3
+colors = np.empty(voxel_array.shape, dtype=object)
+colors[grid_1] = 'r'
+colors[grid_2] = 'c'
+colors[grid_3] = 'm'
 
 fig = plt.figure()
 ax = fig.add_subplot(3, 2, 1)
@@ -262,12 +275,12 @@ ax.set_title(f'Intensity average. Improvement of {round(intensity_averages[-1] /
 
 ax = fig.add_subplot(3, 2, 6, projection='3d')
 ax.set_title(f"The 3D structure optimizing intensity.")
-ax = ax.voxels(grid, edgecolor='k')
+ax = ax.voxels(voxel_array, facecolors=colors, edgecolor='k')
 
 plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
 plt.show()
 
-loc = np.arange(len(x))
+
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(projection='3d')
 ax2.set_title(
@@ -277,10 +290,7 @@ ax2.set_title(
 ax2.set_xlabel('X')
 ax2.set_ylabel('Y')
 ax2.set_zlabel('Z')
-# ax2.set_xticks(x)
-# ax2.set_yticks(y)
-# ax2.set_zticks(z)
-ax2 = ax2.voxels(grid, edgecolor='k')
+ax2 = ax2.voxels(voxel_array, facecolors=colors, edgecolor='k')
 
 plt.show()
 

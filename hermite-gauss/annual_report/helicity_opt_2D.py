@@ -10,7 +10,7 @@ CHOSEN_POINT = 0
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 2
+ITERATIONS = 5
 T = 30
 
 pixel_size = 1 / RESOLUTION
@@ -120,8 +120,8 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     helicity_anim.append(helicity_2D_blocks)
 
     # Exciting fictitious dipoles e, and h for the adjoint field
-    dipole_e = inv.produce_electric_dipole(old_field_h, ft_freq, adj_dt, [x, y, z])
-    dipole_h = inv.produce_magnetic_dipole(old_field, ft_freq, adj_dt, [x, y, z])
+    dipole_e = inv.produce_electric_dipole_2D(old_field_h, ft_freq, adj_dt, [x, y, z], z_obs_index)
+    dipole_h = inv.produce_magnetic_dipole_2D(old_field, ft_freq, adj_dt, [x, y, z], z_obs_index)
     dipoles_at_obs = np.concatenate((dipole_e, dipole_h))
 
     sim_adjoint = mp.Simulation(
@@ -142,9 +142,9 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
     delta_f = inv.df_helicity(old_field, old_field_h, adjoint_field, fun_pattern)
     delta_f = inv.normalise_fun(delta_f)
 
-    ########################################################################################################################
-    # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
-    ########################################################################################################################
+########################################################################################################################
+# SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
+########################################################################################################################
 
     inv.exclude_points([x, y, z], [x_src_index, y_src_index, z_src_index], points_to_delete)
 
@@ -181,8 +181,8 @@ def produce_simulation(fun, src_param_arr, multi_block_arr, ft_freq, time, obs_v
         helicity_2D_blocks = inv.delete_existing(helicity_2D, points_for_3D_plot, False, multiplier)
         helicity_anim.append(helicity_2D_blocks)
 
-        dipole_e = inv.produce_electric_dipole(old_field_h, ft_freq, adj_dt, [x, y, z])
-        dipole_h = inv.produce_magnetic_dipole(old_field, ft_freq, adj_dt, [x, y, z])
+        dipole_e = inv.produce_electric_dipole_2D(old_field_h, ft_freq, adj_dt, [x, y, z], z_obs_index)
+        dipole_h = inv.produce_magnetic_dipole_2D(old_field, ft_freq, adj_dt, [x, y, z], z_obs_index)
 
         dipoles_at_obs = np.concatenate((dipole_e, dipole_h))
 
@@ -271,7 +271,8 @@ ax.pcolormesh(x, y, np.transpose(np.real(he_squared)))
 ax.set_title(f'Helicity')
 
 ax = fig.add_subplot(3, 2, 5)
-ax.plot(blocks_added, blocks_added)
+ax.pcolormesh(x, y, np.transpose(np.real(he_squared - pattern)))
+ax.set_title(f'Merit function')
 
 ax.set_title('Intensity after adding a block and desired intensity')
 
