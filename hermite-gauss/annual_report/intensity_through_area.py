@@ -48,9 +48,8 @@ freq = 1 / WAVELENGTH
 slice_volume = mp.Volume(center=mp.Vector3(), size=OBS_VOL)  # area of fourier transform
 
 
-# **********************************************************************************************************************
 # SIMULATION FIRST STEP - producing a dipole and obtaining parameters for the sim (meep chosen axes and obs points)
-# **********************************************************************************************************************
+
 
 def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, obs_vol, src_pt_arr, lsts,
                        iter,
@@ -84,6 +83,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     x_src_index, y_src_index, z_src_index = [inv.find_nearest(i, j) for i, j in
                                              zip([x, y, z], [src_pos_x, src_pos_y, src_pos_z])]
     z_obs_index = inv.find_nearest(z, CHOSEN_POINT)
+    x_origin = inv.find_nearest(x, 0)
 
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
@@ -121,14 +121,13 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
     delta_f = inv.df(old_field, adjoint_field)
+    delta_f = inv.limit_area_df(delta_f, x_origin, fx0i)
 
-    ########################################################################################################################
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
-    ########################################################################################################################
 
     inv.exclude_points([x, y, z], [x_src_index, y_src_index, z_src_index], points_to_delete)
 
-    x_index, y_index, z_index = inv.pick_extremum(delta_f, points_to_delete)
+    x_index, y_index, z_index = inv.pick_max(delta_f, points_to_delete)
     [x_inclusion, y_inclusion, z_inclusion] = x[x_index], y[y_index], z[z_index]
 
     points_to_delete.append((x_index, y_index, z_index))
@@ -182,10 +181,11 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
         delta_f = inv.df(old_field, adjoint_field)
+        delta_f = inv.limit_area_df(delta_f, x_origin, fx0i)
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
-        x_index, y_index, z_index = inv.pick_extremum(delta_f, points_to_delete)
+        x_index, y_index, z_index = inv.pick_max(delta_f, points_to_delete)
         [x_inclusion, y_inclusion, z_inclusion] = x[x_index], y[y_index], z[z_index]
 
         points_to_delete.append((x_index, y_index, z_index))
@@ -249,7 +249,7 @@ grid_3 = inv.cubify(larger_blocks, [x, y, z])
 voxel_array = grid_1 | grid_2 | grid_3
 colors = np.empty(voxel_array.shape, dtype=object)
 colors[grid_1] = 'r'
-colors[grid_2] = 'c'
+colors[grid_2] = 'b'
 colors[grid_3] = 'm'
 
 fig = plt.figure()
@@ -280,7 +280,6 @@ ax = ax.voxels(voxel_array, facecolors=colors, edgecolor='k')
 plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
 plt.show()
 
-
 fig2 = plt.figure()
 ax2 = fig2.add_subplot(projection='3d')
 ax2.set_title(
@@ -294,20 +293,20 @@ ax2 = ax2.voxels(voxel_array, facecolors=colors, edgecolor='k')
 
 plt.show()
 
-plt.rcParams["figure.figsize"] = [6.00, 6.00]
-plt.rcParams["figure.autolayout"] = True
-fig_a, ax_a = plt.subplots()
-
-intns = ax_a.pcolormesh(x, y, np.transpose(intensity_a[0]))
-
-fig_a.colorbar(intns)
-
-
-def animate(i):
-    intns.set_array(np.transpose(intensity_a[i][:, :]).flatten())
-    ax_a.set_title(f"Animation of Intensity pattern")
-
-
-anim = animation.FuncAnimation(fig_a, animate, interval=100, frames=ITERATIONS)
-anim.save(f'Intensity animation up to {ITERATIONS} frames.gif')
-plt.show()
+# plt.rcParams["figure.figsize"] = [6.00, 6.00]
+# plt.rcParams["figure.autolayout"] = True
+# fig_a, ax_a = plt.subplots()
+#
+# intns = ax_a.pcolormesh(x, y, np.transpose(intensity_a[0]))
+#
+# fig_a.colorbar(intns)
+#
+#
+# def animate(i):
+#     intns.set_array(np.transpose(intensity_a[i][:, :]).flatten())
+#     ax_a.set_title(f"Animation of Intensity pattern")
+#
+#
+# anim = animation.FuncAnimation(fig_a, animate, interval=100, frames=ITERATIONS)
+# anim.save(f'Intensity animation up to {ITERATIONS} frames.gif')
+# plt.show()

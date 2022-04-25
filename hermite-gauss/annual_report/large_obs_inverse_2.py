@@ -182,13 +182,29 @@ def delete_existing(arr, lst, dim_3D=True, multi=1):
     return arr
 
 
-def pick_extremum(delta, lst):
+def pick_max(delta, lst):
+    # lst = points_to_delete
+    """Returns a tuple of points (x,y,z) corresponding to the highest value of the dF."""
+    if len(lst) > 0:
+        delta = delete_existing(delta, lst)
+    extr_x, extr_y, extr_z = np.unravel_index(delta.argmax(), delta.shape)
+    return extr_x, extr_y, extr_z
+
+
+def pick_min(delta, lst):
     # lst = points_to_delete
     """Returns a tuple of points (x,y,z) corresponding to the highest value of the dF."""
     if len(lst) > 0:
         delta = delete_existing(delta, lst)
     extr_x, extr_y, extr_z = np.unravel_index(delta.argmin(), delta.shape)
     return extr_x, extr_y, extr_z
+
+
+def limit_area_df(arr, a, b):
+    """Limits the df in the x direction, between (a,b), in the xy plane"""
+    new_df = np.zeros(arr.shape)
+    new_df[a:b, :, :] = arr[a:b, :, :]
+    return new_df
 
 
 def produce_adjoint_field(forward_field, freq, dt, arr_coord, arr_obs_pts):
@@ -296,7 +312,6 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
         for j in range(z0, zn):
             for element in range(3):
                 source_coords.append((i, y0, j))
-                print("Source point", x_ax[i], z_ax[j])
                 source_area.append(mp.Source(
                     mp.ContinuousSource(freq, width=dt, is_integrated=True),
                     component=[mp.Ex, mp.Ey, mp.Ez][element],
@@ -304,7 +319,6 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
                     center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
                     amplitude=np.conjugate(field[element][i, y0, j])))
     return source_area, source_coords
-
 
 
 def add_block(arr_centre, block_size, geo_lst):
