@@ -10,7 +10,7 @@ CHOSEN_POINT = 0
 
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 2
+ITERATIONS = 300
 T = 80
 
 pixel_size = 1 / RESOLUTION
@@ -84,7 +84,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
                                              zip([x, y, z], [src_pos_x, src_pos_y, src_pos_z])]
     z_obs_index = inv.find_nearest(z, CHOSEN_POINT)
     x_origin = inv.find_nearest(x, 0)
-
+    x_border = inv.find_nearest(x, 1)
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
     fxni, fyni = [inv.find_nearest(i, j) for i, j in zip([x, y], [fxn, fyn])]
@@ -121,7 +121,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
     delta_f = inv.df(old_field, adjoint_field)
-    delta_f = inv.limit_area_df(delta_f, x_origin, fx0i)
+    delta_f = inv.limit_area_df(delta_f, x_origin, x_border)
 
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
 
@@ -181,7 +181,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
         delta_f = inv.df(old_field, adjoint_field)
-        delta_f = inv.limit_area_df(delta_f, x_origin, fx0i)
+        delta_f = inv.limit_area_df(delta_f, x_origin, x_border)
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
@@ -249,8 +249,8 @@ grid_3 = inv.cubify(larger_blocks, [x, y, z])
 voxel_array = grid_1 | grid_2 | grid_3
 colors = np.empty(voxel_array.shape, dtype=object)
 colors[grid_1] = 'r'
-colors[grid_2] = 'b'
-colors[grid_3] = 'm'
+colors[grid_2] = 'y'
+colors[grid_3] = 'b'
 
 fig = plt.figure()
 ax = fig.add_subplot(3, 2, 1)

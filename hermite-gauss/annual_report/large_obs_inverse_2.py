@@ -207,6 +207,13 @@ def limit_area_df(arr, a, b):
     return new_df
 
 
+def limit_area_df_2D(arr, a, b, c):
+    """Limits the df in the x direction, between (a,b), in the xy plane"""
+    new_df = np.zeros(arr.shape)
+    new_df[a:b, :c, :] = arr[a:b, :c, :]
+    return new_df
+
+
 def produce_adjoint_field(forward_field, freq, dt, arr_coord, arr_obs_pts):
     """Takes in an array of components of the simulated forward field,
      an array of axes i.e. [x,y,z] and an array of indices of  observation points [i0,j0,k0],
