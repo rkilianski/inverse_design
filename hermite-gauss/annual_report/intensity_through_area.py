@@ -2,16 +2,17 @@ import meep as mp
 import numpy as np
 import large_obs_inverse_2 as inv
 import module_hg_beam as mhg
-from matplotlib import pyplot as plt, animation
+from matplotlib import pyplot as plt, animation, patches
 
 #  Slice of the 3D data to plot the results it in 2D
 SLICE_AXIS = 2
 CHOSEN_POINT = 0
-
+BEAM_FACE_AXIS = 1
+AXES = [SLICE_AXIS, BEAM_FACE_AXIS]
 # #  Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 300
-T = 80
+ITERATIONS = 100
+T = 20
 
 pixel_size = 1 / RESOLUTION
 MULTIPLIER = 2  # must be an int !
@@ -36,7 +37,7 @@ SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 
 # # Vertices of the area to be optimised ,[x0,xn,y0,z0,zn] s.t. area of (xn-x0)*(zn-z0) at level y0
-flux_area = [2, 3, -3, -0.5, 0.5]
+flux_area = [1, 2, -3, -0.5, 0.5]
 
 # #  HG beam parameters
 M, N = 0, 0
@@ -63,7 +64,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     multiplier, block_size = multi_block_arr
     intensity_anim, avg_intensity, points_to_delete, points_for_3D_plot = lsts
     iterations = iter
-    slice_axis = slc_ax
+    slice_axis, beam_face_ax = slc_ax
 
     sim = mp.Simulation(
         cell_size=cell_size,
@@ -83,8 +84,10 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     x_src_index, y_src_index, z_src_index = [inv.find_nearest(i, j) for i, j in
                                              zip([x, y, z], [src_pos_x, src_pos_y, src_pos_z])]
     z_obs_index = inv.find_nearest(z, CHOSEN_POINT)
-    x_origin = inv.find_nearest(x, 0)
+
+    x_origin = inv.find_nearest(x, -1)
     x_border = inv.find_nearest(x, 1)
+
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
     fxni, fyni = [inv.find_nearest(i, j) for i, j in zip([x, y], [fxn, fyn])]
@@ -121,7 +124,6 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
     delta_f = inv.df(old_field, adjoint_field)
-    delta_f = inv.limit_area_df(delta_f, x_origin, x_border)
 
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
 
@@ -181,7 +183,6 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
         delta_f = inv.df(old_field, adjoint_field)
-        delta_f = inv.limit_area_df(delta_f, x_origin, x_border)
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
@@ -199,11 +200,17 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
 
     forward_2D = inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index)
     adjoint_2D = inv.get_fields(sim_adjoint, obs_vol, True, slice_axis, z_obs_index)
+    forward_2D_beam = inv.get_fields(sim, obs_vol, True, beam_face_ax, fy0i)
     df_2D = delta_f[:, :, z_obs_index]
 
     intensities_list = [intensity_anim, avg_intensity]
 
-    return axes, forward_2D, adjoint_2D, df_2D, intensities_list, src_ind, obs_ind
+    x_line = np.arange(x[fx0i], x[fxni], 0.02)
+    x_line_z = np.full(x_line.shape, -3)
+    obs_area_line = [x_line, x_line_z]
+    rec_vrtx = []
+
+    return axes, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_ind, obs_ind, obs_area_line
 
 
 # ***************************************** CREATING A BEAM ************************************************************
@@ -223,14 +230,15 @@ lists = [intensity_anim, intensity_avg, points_to_delete, points_for_3D_plot]
 
 ########################################################################################################################
 
+
 blocks_added = np.arange(ITERATIONS)
 
 data = produce_simulation(src_data, flux_area, blk_data, freq, T, OBS_VOL, src_loc, lists,
                           ITERATIONS,
-                          SLICE_AXIS,
+                          AXES,
                           DT)
 
-[x, y, z], forward_field, adjoint_field, df_2D, intensities, source, area = data
+[x, y, z], forward_field, adjoint_field, df_2D, beam_face, intensities, source, area, red_line = data
 
 Ex, Ey, Ez, eps = forward_field
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
@@ -238,6 +246,7 @@ intensity_a, intensity_averages = intensities
 
 merit_function = df_2D
 e_squared = inv.get_intensity(forward_field)
+e_squared_beam = inv.get_intensity(beam_face)
 e_squared_adj = inv.get_intensity(adjoint_field)
 
 larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
@@ -248,8 +257,8 @@ grid_3 = inv.cubify(larger_blocks, [x, y, z])
 
 voxel_array = grid_1 | grid_2 | grid_3
 colors = np.empty(voxel_array.shape, dtype=object)
-colors[grid_1] = 'r'
-colors[grid_2] = 'y'
+colors[grid_1] = 'y'
+colors[grid_2] = 'r'
 colors[grid_3] = 'b'
 
 fig = plt.figure()
@@ -259,6 +268,7 @@ ax.set_title('dF')
 
 ax = fig.add_subplot(3, 2, 2)
 ax.pcolormesh(x, y, np.transpose(e_squared))
+ax.plot(red_line[0], red_line[1], 'ro')
 ax.set_title('Intensity.')
 
 ax = fig.add_subplot(3, 2, 3)
@@ -267,15 +277,24 @@ ax.set_title('Adjoint field intensity')
 
 ax = fig.add_subplot(3, 2, 4)
 ax.pcolormesh(x, y, np.transpose(intensity_a[-1]))
+ax.plot(red_line[0], red_line[1], 'ro')
 ax.set_title(f'Intensity and the shadow of a structure, slicing by z-axis ')
 
 ax = fig.add_subplot(3, 2, 5)
 ax.plot(blocks_added, intensity_averages)
 ax.set_title(f'Intensity average. Improvement of {round(intensity_averages[-1] / intensity_averages[0], 4)}.')
 
-ax = fig.add_subplot(3, 2, 6, projection='3d')
-ax.set_title(f"The 3D structure optimizing intensity.")
-ax = ax.voxels(voxel_array, facecolors=colors, edgecolor='k')
+rect = patches.Rectangle((50, 100), 40, 30, linewidth=1, edgecolor='r', facecolor='none')
+
+# Add the patch to the Axes
+ax.add_patch(rect)
+
+ax = fig.add_subplot(3, 2, 6)
+ax.pcolormesh(x, y, np.transpose(e_squared_beam))
+ax.set_title('Intensity at the optimised wall.')
+# ax = fig.add_subplot(3, 2, 6, projection='3d')
+# ax.set_title(f"The 3D structure optimizing intensity.")
+# ax = ax.voxels(voxel_array, facecolors=colors, edgecolor='k')
 
 plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
 plt.show()
