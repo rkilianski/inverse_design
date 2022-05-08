@@ -19,6 +19,7 @@ def calc_distance(src_arr, adj_arr):
     r_sq = (src_x - adj_x) ** 2 + (src_y - adj_y) ** 2 + (src_z - adj_z) ** 2
     return r_sq
 
+
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -64,7 +65,7 @@ def intensity_at_point(field, x_index, y_index, z_index):
     return intensity_at_x0
 
 
-def intensity_avg_area(axes, field, flux_indices):
+def intensity_avg_area(axes, field, flux_indices, precision=4):
     x, y, z = axes
     xi, xn, y0, zi, zn = flux_indices
     total = 0
@@ -73,7 +74,7 @@ def intensity_avg_area(axes, field, flux_indices):
         for j in range(zi, zn):
             total += intensity_at_point(field, i, y0, j)
 
-    return round(total / area, 4)
+    return round(total / area, precision)
 
 
 def get_helicity(arr_e, arr_h):
@@ -148,22 +149,6 @@ def df(old_field_arr, adj_field_arr):
     return d_func
 
 
-def df_point(old_field_arr, adj_field_arr, fun):
-    e1, e2, e3, eps1 = old_field_arr
-    a1, a2, a3, eps2 = adj_field_arr
-    intensity = get_intensity(old_field_arr)
-    d_func = 2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (intensity - fun)
-    return d_func
-
-
-def df_helicity(old_field_arr_e, old_field_arr_h, adj_field_arr, fun):
-    e1, e2, e3, eps1 = old_field_arr_e
-    a1, a2, a3, eps2 = adj_field_arr
-    helicity = normalise_fun(get_helicity(old_field_arr_e, old_field_arr_h))
-    d_func = -2 * np.real((a1 * e1 + a2 * e2 + a3 * e3)) * (helicity - fun)
-    return d_func
-
-
 def delete_existing(arr, lst, dim_3D=True, multi=1):
     """multi is the multiplier applied to block size,
     it is only used in 2D projection to adjust the size of inclusions for animation."""
@@ -201,137 +186,25 @@ def pick_max(delta, lst):
 
 def pick_min(delta, lst):
     # lst = points_to_delete
-    """Returns a tuple of points (x,y,z) corresponding to the highest value of the dF."""
+    """Returns a tuple of points (x,y,z) corresponding to the smallest value of the dF."""
     if len(lst) > 0:
         delta = delete_existing(delta, lst)
     extr_x, extr_y, extr_z = np.unravel_index(delta.argmin(), delta.shape)
     return extr_x, extr_y, extr_z
 
 
-def limit_area_df(arr, a, b):
-    """Limits the df in the x direction, between (a,b), in the xy plane"""
-    new_df = np.zeros(arr.shape)
-    new_df[a:b, :, :] = arr[a:b, :, :]
-    return new_df
-
-
-def limit_area_df_2D(arr, a, b, c):
-    """Limits the df in the x direction, between (a,b), in the xy plane"""
-    new_df = np.zeros(arr.shape)
-    new_df[a:b, :c, :] = arr[a:b, :c, :]
-    return new_df
-
-
-def limit_area_df_3D(arr, a, b, c):
-    """Limits the df in the x direction, between (a,b), in the xy plane"""
-    new_df = np.zeros(arr.shape)
-    new_df[a:b, :c, a:b] = arr[a:b, :c, a:b]
-    return new_df
-
-
-def produce_adjoint_field(forward_field, freq, dt, arr_coord, arr_obs_pts):
-    """Takes in an array of components of the simulated forward field,
-     an array of axes i.e. [x,y,z] and an array of indices of  observation points [i0,j0,k0],
-     where e.g. x[i0] = x0."""
-    source_at_obs = []
-    x_ax, y_ax, z_ax = arr_coord
-    i0, j0, k0 = arr_obs_pts
-    for element in range(3):
-        source_at_obs.append(mp.Source(
-            mp.ContinuousSource(freq, width=dt, is_integrated=True),
-            component=[mp.Ex, mp.Ey, mp.Ez][element],
-            size=mp.Vector3(),
-            center=mp.Vector3(x_ax[i0], y_ax[j0], z_ax[k0]),
-            amplitude=np.conjugate(forward_field[element][i0, j0, k0])))
-    return source_at_obs
-
-
-def produce_adjoint_volume(field, freq, dt, arr_coord):
-    source_volume = []
-    x_ax, y_ax, z_ax = arr_coord
-    for i in range(len(x_ax)):
-        for j in range(len(y_ax)):
-            for k in range(len(z_ax)):
-                for element in range(3):
-                    source_volume.append(mp.Source(
-                        mp.ContinuousSource(freq, width=dt, is_integrated=True),
-                        component=[mp.Ex, mp.Ey, mp.Ez][element],
-                        size=mp.Vector3(),
-                        center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
-                        amplitude=np.conjugate(field[element][i, j, k])))
-    return source_volume
-
-
-def produce_electric_dipole(field, freq, dt, arr_coord):
-    source_volume = []
-    x_ax, y_ax, z_ax = arr_coord
-    for i in range(len(x_ax)):
-        for j in range(len(y_ax)):
-            for k in range(len(z_ax)):
-                for element in range(3):
-                    source_volume.append(mp.Source(
-                        mp.ContinuousSource(freq, width=dt, is_integrated=True),
-                        component=[mp.Ex, mp.Ey, mp.Ez][element],
-                        size=mp.Vector3(),
-                        center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
-                        amplitude=np.conjugate(field[element][i, j, k])))
-    return source_volume
-
-
-def produce_magnetic_dipole(field, freq, dt, arr_coord):
-    source_volume = []
-    x_ax, y_ax, z_ax = arr_coord
-    for i in range(len(x_ax)):
-        for j in range(len(y_ax)):
-            for k in range(len(z_ax)):
-                for element in range(3):
-                    source_volume.append(mp.Source(
-                        mp.ContinuousSource(freq, width=dt, is_integrated=True),
-                        component=[mp.Hx, mp.Hy, mp.Hz][element],
-                        size=mp.Vector3(),
-                        center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
-                        amplitude=np.conjugate(field[element][i, j, k])))
-    return source_volume
-
-
-def produce_electric_dipole_2D(field, freq, dt, arr_coord, obs_point):
-    source_volume = []
-    x_ax, y_ax, z_ax = arr_coord
-    for i in range(len(x_ax)):
-        for j in range(len(y_ax)):
-            for element in range(3):
-                source_volume.append(mp.Source(
-                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
-                    component=[mp.Ex, mp.Ey, mp.Ez][element],
-                    size=mp.Vector3(),
-                    center=mp.Vector3(x_ax[i], y_ax[j], z_ax[obs_point]),
-                    amplitude=np.conjugate(field[element][i, j, obs_point])))
-    return source_volume
-
-
-def produce_magnetic_dipole_2D(field, freq, dt, arr_coord, obs_point):
-    source_volume = []
-    x_ax, y_ax, z_ax = arr_coord
-    for i in range(len(x_ax)):
-        for j in range(len(y_ax)):
-            for element in range(3):
-                source_volume.append(mp.Source(
-                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
-                    component=[mp.Hx, mp.Hy, mp.Hz][element],
-                    size=mp.Vector3(),
-                    center=mp.Vector3(x_ax[i], y_ax[j], z_ax[obs_point]),
-                    amplitude=np.conjugate(field[element][i, j, obs_point])))
-    return source_volume
-
-
-def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
+def produce_adjoint_area_even(field, freq, dt, arr_coord, flux_params):
+    """ Excites dipoles over an area of interest. The region is the optimisation area shifted in x-axis.
+     This allows the beam to be contained in the optimisation region.
+     Returns [0], the list of sources and [1], their coordinates-used later for 3D plotting."""
     source_area = []
     source_coords = []
     x_ax, y_ax, z_ax = arr_coord
     x0, xn, y0, z0, zn = flux_params
-    print(flux_params, x_ax[x0], x_ax[xn], y_ax[x0], y_ax[xn], z_ax[z0])
-    for i in range(x0, xn + 1):
-        for j in range(z0, zn + 1):
+    x_shift = int((xn-x0)/2)
+
+    for i in range(x0+x_shift, xn+x_shift):
+        for j in range(z0, zn):
             for element in range(3):
                 source_coords.append((i, y0, j))
                 source_area.append(mp.Source(
@@ -340,29 +213,7 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
                     size=mp.Vector3(),
                     center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
                     amplitude=np.conjugate(field[element][i, y0, j])))
-    return source_area, source_coords
 
-def produce_adjoint_area_even(field, src_arr, freq, dt, arr_coord, flux_params):
-    source_area = []
-    source_coords = []
-    x_ax, y_ax, z_ax = arr_coord
-    x0, xn, y0, z0, zn = flux_params
-    print(flux_params, x_ax[x0], x_ax[xn], y_ax[x0], y_ax[xn], z_ax[z0])
-    for i in range(x0, xn):
-        for j in range(z0, zn):
-            for element in range(3):
-
-                source_coords.append((i, y0, j))
-                adj_coords = x_ax[i], y_ax[y0], z_ax[j]
-                r_sq_multi = calc_distance(src_arr, adj_coords)
-
-                source_area.append(mp.Source(
-                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
-                    component=[mp.Ex, mp.Ey, mp.Ez][element],
-                    size=mp.Vector3(),
-                    center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
-                    amplitude=(r_sq_multi**8) * np.conjugate(field[element][i, y0, j])))
-                print((x_ax[i], y_ax[y0], z_ax[j]), (r_sq_multi**8)* np.abs(np.conjugate(field[element][i, y0, j])))
     return source_area, source_coords
 
 
