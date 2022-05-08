@@ -13,6 +13,12 @@ def normalise_fun(arr):
     return f(arr)
 
 
+def calc_distance(src_arr, adj_arr):
+    src_x, src_y, src_z = src_arr
+    adj_x, adj_y, adj_z = adj_arr
+    r_sq = (src_x - adj_x) ** 2 + (src_y - adj_y) ** 2 + (src_z - adj_z) ** 2
+    return r_sq
+
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -105,15 +111,16 @@ def get_fields_h(simulation, obs_vol, fields_2D=False, *slice_axis_and_which_poi
         fields_data_elements = [[a[which_point, :, :], a[:, which_point, :], a[:, :, which_point]][slice_axis]
                                 for a
                                 in fields_data_elements]
-    # ex,ey,ez,epsilon
+    # hx,hy,hz,epsilon
 
     return fields_data_elements
 
 
-def exclude_points(arr_axes, arr_src, points_list):
+def exclude_points(arr_axes, arr_src, obs_centre_arr, points_list):
     # points_list = points_to_delete
     x, y, z = arr_axes
     x_src_i, y_src_i, z_src_i = arr_src
+    x_obs_i, y_obs_i, z_obs_i = obs_centre_arr
 
     def _delta(l, m, n):
         return (l - m[n]) ** 2
@@ -122,8 +129,9 @@ def exclude_points(arr_axes, arr_src, points_list):
         for y_i in y:
             for z_i in z:
                 src_dist = _delta(x_i, x, x_src_i) + _delta(y_i, y, y_src_i) + _delta(z_i, z, z_src_i)
+                obs_dist = _delta(x_i, x, x_obs_i) + _delta(y_i, y, y_obs_i) + _delta(z_i, z, z_obs_i)
 
-                if src_dist < 0.1:
+                if src_dist < 0.1 or obs_dist < 1:
                     x_index = np.where(x == x_i)[0][0]
                     y_index = np.where(y == y_i)[0][0]
                     z_index = np.where(z == z_i)[0][0]
@@ -213,11 +221,13 @@ def limit_area_df_2D(arr, a, b, c):
     new_df[a:b, :c, :] = arr[a:b, :c, :]
     return new_df
 
+
 def limit_area_df_3D(arr, a, b, c):
     """Limits the df in the x direction, between (a,b), in the xy plane"""
     new_df = np.zeros(arr.shape)
     new_df[a:b, :c, a:b] = arr[a:b, :c, a:b]
     return new_df
+
 
 def produce_adjoint_field(forward_field, freq, dt, arr_coord, arr_obs_pts):
     """Takes in an array of components of the simulated forward field,
@@ -320,8 +330,8 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
     x_ax, y_ax, z_ax = arr_coord
     x0, xn, y0, z0, zn = flux_params
     print(flux_params, x_ax[x0], x_ax[xn], y_ax[x0], y_ax[xn], z_ax[z0])
-    for i in range(x0, xn):
-        for j in range(z0, zn):
+    for i in range(x0, xn + 1):
+        for j in range(z0, zn + 1):
             for element in range(3):
                 source_coords.append((i, y0, j))
                 source_area.append(mp.Source(
@@ -330,6 +340,29 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
                     size=mp.Vector3(),
                     center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
                     amplitude=np.conjugate(field[element][i, y0, j])))
+    return source_area, source_coords
+
+def produce_adjoint_area_even(field, src_arr, freq, dt, arr_coord, flux_params):
+    source_area = []
+    source_coords = []
+    x_ax, y_ax, z_ax = arr_coord
+    x0, xn, y0, z0, zn = flux_params
+    print(flux_params, x_ax[x0], x_ax[xn], y_ax[x0], y_ax[xn], z_ax[z0])
+    for i in range(x0, xn):
+        for j in range(z0, zn):
+            for element in range(3):
+
+                source_coords.append((i, y0, j))
+                adj_coords = x_ax[i], y_ax[y0], z_ax[j]
+                r_sq_multi = calc_distance(src_arr, adj_coords)
+
+                source_area.append(mp.Source(
+                    mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                    component=[mp.Ex, mp.Ey, mp.Ez][element],
+                    size=mp.Vector3(),
+                    center=mp.Vector3(x_ax[i], y_ax[y0], z_ax[j]),
+                    amplitude=(r_sq_multi**8) * np.conjugate(field[element][i, y0, j])))
+                print((x_ax[i], y_ax[y0], z_ax[j]), (r_sq_multi**8)* np.abs(np.conjugate(field[element][i, y0, j])))
     return source_area, source_coords
 
 
