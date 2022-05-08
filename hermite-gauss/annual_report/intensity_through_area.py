@@ -10,8 +10,8 @@ CHOSEN_POINT = 0
 BEAM_FACE_AXIS = 1
 AXES = [SLICE_AXIS, BEAM_FACE_AXIS]
 # #  Parameters of the simulation
-RESOLUTION = 6
-ITERATIONS = 100
+RESOLUTION = 8
+ITERATIONS = 10
 T = 20
 
 pixel_size = 1 / RESOLUTION
@@ -37,7 +37,7 @@ SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 src_loc = [SRC_POS_X, SRC_POS_Y, SRC_POS_Z]
 
 # # Vertices of the area to be optimised ,[x0,xn,y0,z0,zn] s.t. area of (xn-x0)*(zn-z0) at level y0
-flux_area = [1, 2, -3, -0.5, 0.5]
+flux_area = [-1.5, -0.5, -3, -0.5, 0.5]
 
 # #  HG beam parameters
 M, N = 0, 0
@@ -59,7 +59,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     global adjoint_field
 
     src_pos_x, src_pos_y, src_pos_z = src_pt_arr
-    fx0, fxn, fy0, fyn, fz0 = vertices
+    fx0, fxn, fy0, fz0, fzn = vertices
     cell_size, source, pml, res, geo_lst = src_param_arr
     multiplier, block_size = multi_block_arr
     intensity_anim, avg_intensity, points_to_delete, points_for_3D_plot = lsts
@@ -85,17 +85,14 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
                                              zip([x, y, z], [src_pos_x, src_pos_y, src_pos_z])]
     z_obs_index = inv.find_nearest(z, CHOSEN_POINT)
 
-    x_origin = inv.find_nearest(x, -1)
-    x_border = inv.find_nearest(x, 1)
-
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
-    fxni, fyni = [inv.find_nearest(i, j) for i, j in zip([x, y], [fxn, fyn])]
-    flux_indices = [fx0i, fxni, fy0i, fyni, fz0i]
+    fxni, fzni = [inv.find_nearest(i, j) for i, j in zip([x, z], [fxn, fzn])]
+    flux_indices = [fx0i, fxni, fy0i, fz0i, fzni]
+    centre_area = [fx0i + int((fxni - fx0i) / 2), fy0i, fz0i + int((fzni - fz0i) / 2)]
 
     # Simulate a field and use its values at obs points to simulate a fictitious field - adjoint field.
     old_field = inv.get_fields(sim, obs_vol)
-    old_field = (1 / (np.amax(old_field))) * old_field
 
     # Recording a snapshot of 2D intensity pattern for animation
     intensity_2D = inv.get_intensity(inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index))
@@ -121,13 +118,12 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     sim_adjoint.run(until=time)
 
     adjoint_field = inv.get_fields(sim_adjoint, obs_vol)
-    adjoint_field = (1 / np.amax(adjoint_field)) * adjoint_field
 
     delta_f = inv.df(old_field, adjoint_field)
 
     # SIMULATION SECOND STEP: updating geometry from starting conditions and repeating the process.
 
-    inv.exclude_points([x, y, z], [x_src_index, y_src_index, z_src_index], points_to_delete)
+    inv.exclude_points([x, y, z], [x_src_index, y_src_index, z_src_index], centre_area, points_to_delete)
 
     x_index, y_index, z_index = inv.pick_max(delta_f, points_to_delete)
     [x_inclusion, y_inclusion, z_inclusion] = x[x_index], y[y_index], z[z_index]
@@ -151,7 +147,6 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         sim.run(until=time)
 
         old_field = inv.get_fields(sim, obs_vol)
-        old_field = (1 / (np.amax(old_field))) * old_field
 
         # Recording a snapshot of 2D intensity pattern for animation
         intensity_2D = inv.get_intensity(inv.get_fields(sim, obs_vol, True, slice_axis, z_obs_index))
@@ -180,7 +175,7 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
         sim_adjoint.run(until=time)
 
         adjoint_field = inv.get_fields(sim_adjoint, obs_vol)
-        adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
+        # adjoint_field = (1 / (np.amax(adjoint_field))) * adjoint_field
 
         delta_f = inv.df(old_field, adjoint_field)
 
@@ -208,9 +203,12 @@ def produce_simulation(src_param_arr, vertices, multi_block_arr, ft_freq, time, 
     x_line = np.arange(x[fx0i], x[fxni], 0.02)
     x_line_z = np.full(x_line.shape, -3)
     obs_area_line = [x_line, x_line_z]
-    rec_vrtx = []
+    # data for drawing a rectangle of area of interest
+    rect_x = x[fxni] - x[fx0i]
+    rect_z = z[fzni] - z[fz0i]
+    rec_data = [x[fx0i], z[fz0i], rect_x, rect_z]  # x0,z0,len x, len z
 
-    return axes, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_ind, obs_ind, obs_area_line
+    return axes, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_ind, obs_ind, obs_area_line, rec_data
 
 
 # ***************************************** CREATING A BEAM ************************************************************
@@ -238,8 +236,9 @@ data = produce_simulation(src_data, flux_area, blk_data, freq, T, OBS_VOL, src_l
                           AXES,
                           DT)
 
-[x, y, z], forward_field, adjoint_field, df_2D, beam_face, intensities, source, area, red_line = data
+[x, y, z], forward_field, adjoint_field, df_2D, beam_face, intensities, source, area, red_line, rect = data
 
+X0, Z0, X_LENGTH, Z_LENGTH = rect
 Ex, Ey, Ez, eps = forward_field
 Ex_a, Ey_a, Ez_a, eps_a = adjoint_field
 intensity_a, intensity_averages = intensities
@@ -284,14 +283,12 @@ ax = fig.add_subplot(3, 2, 5)
 ax.plot(blocks_added, intensity_averages)
 ax.set_title(f'Intensity average. Improvement of {round(intensity_averages[-1] / intensity_averages[0], 4)}.')
 
-rect = patches.Rectangle((50, 100), 40, 30, linewidth=1, edgecolor='r', facecolor='none')
-
-# Add the patch to the Axes
-ax.add_patch(rect)
-
 ax = fig.add_subplot(3, 2, 6)
 ax.pcolormesh(x, y, np.transpose(e_squared_beam))
 ax.set_title('Intensity at the optimised wall.')
+# Drawing the rectangle
+rect = patches.Rectangle((X0, Z0), X_LENGTH, Z_LENGTH, linewidth=1, edgecolor='r', facecolor='none')
+ax.add_patch(rect)
 # ax = fig.add_subplot(3, 2, 6, projection='3d')
 # ax.set_title(f"The 3D structure optimizing intensity.")
 # ax = ax.voxels(voxel_array, facecolors=colors, edgecolor='k')
