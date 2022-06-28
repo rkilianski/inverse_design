@@ -1,18 +1,19 @@
 import meep as mp
 import numpy as np
+import pickle
 import inv_area_intns as inv
 import module_hg_beam as mhg
 from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
-RESOLUTION = 12
-ITERATIONS = 5
+RESOLUTION = 8
+ITERATIONS = 400
 T = 20
 DT = 5
 
 # Setting up the simulation box
 DPML = 1
-CELL_X, CELL_Y, CELL_Z = 6, 6, 6  # dimensions of the computational cell, not including PML
+CELL_X, CELL_Y, CELL_Z = 8, 8, 8  # dimensions of the computational cell, not including PML
 OBS_VOL = mp.Vector3(6, 6, 6)
 
 sx, sy, sz = CELL_X + 2 * DPML, CELL_Y + 2 * DPML, CELL_Z + 2 * DPML
@@ -192,7 +193,7 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
 
     # data for drawing a 1D opt area
     x_line = np.arange(x[fx0i], x[fxni], 0.02)
-    x_line_z = np.full(x_line.shape, -3)
+    x_line_z = np.full(x_line.shape, FLUX_AREA[2])
     obs_area_line = [x_line, x_line_z]
 
     # data for drawing a rectangle of area of interest
@@ -288,10 +289,19 @@ ax.set_title('Intensity at the optimised wall.')
 rect = patches.Rectangle((X0, Z0), X_LENGTH, Z_LENGTH, linewidth=1, edgecolor='r', facecolor='none')
 ax.add_patch(rect)
 
-plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
+# plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
 plt.show()
 
 # ******************************************** 3D PLOTS ****************************************************************
+
+axes = [x, y, z]
+with open(f"structure_at_{ITERATIONS}", "wb") as fp:  # Pickling
+    pickle.dump(points_for_3D_plot, fp)
+with open(f"axes_at_{ITERATIONS}", "wb") as sp:  # Pickling
+    pickle.dump(axes, sp)
+
+# with open("test", "rb") as fp:  # Unpickling
+#     b = pickle.load(fp)
 
 RADIUS = 0.05
 larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
