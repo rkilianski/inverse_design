@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-import module_hg_beam as mhg
+import module_lg_beam as mlg
 import meep as mp
 import numpy as np
 
@@ -11,11 +11,11 @@ CHOSEN_POINT = 20
 DPML = 2  # thickness of perfectly matched layers (PMLs) around the box
 PML_LAYERS = [mp.PML(DPML)]
 DT = 5
-T = 100
+T = 20
 FCEN = 1
 
 CELL_X, CELL_Y, CELL_Z = 10, 10, 10
-OBS_X_A, OBS_Y_A, OBS_Z_A = 6, 6, 6  # dimensions of the computational cell, not including PML
+OBS_X_A, OBS_Y_A, OBS_Z_A = 8, 8, 8  # dimensions of the computational cell, not including PML
 
 sx = CELL_X + 2 * DPML
 sy = CELL_Y + 2 * DPML
@@ -27,11 +27,9 @@ obs_vol = mp.Vector3(OBS_X_A, OBS_Y_A, OBS_Z_A)
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 
 MATERIAL = mp.Medium(epsilon=1)
-M, N = 0, 0
 WAVELENGTH = 1
 WAIST = 1
 
-beams = []
 plots_2D = []
 
 
@@ -46,10 +44,13 @@ def get_fields(simulation, slice_axis, which_point):
     return fields_2D
 
 
-for i in range(3):
-    for j in range(3):
+modes_nr = []
+beams = []
+for i in range(0, 3):
+    for j in range(0, 3):
+        modes_nr.append((i, j))
         beams.append(
-            mhg.make_hg_beam(FCEN, WAVELENGTH, [0, sy, sz], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z], dir_prop=0, waist=WAIST,
+            mlg.make_lg_beam(FCEN, WAVELENGTH, [0, sy, sz], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z], dir_prop=0, waist=WAIST,
                              m=i, n=j))
 
 for i in range(9):
@@ -64,7 +65,7 @@ for i in range(9):
         force_complex_fields=True
     )
 
-    sim.run(until=20)
+    sim.run(until=T)
 
     x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=obs_vol)
     [x, y, z] = [coordinate[1:-1] for coordinate in [x, y, z]]
@@ -74,32 +75,31 @@ for i in range(9):
 
 fig, ax = plt.subplots(3, 3, figsize=(12, 12))
 
-ax[0, 0].pcolormesh(x, y, plots_2D[0], cmap='Spectral', alpha=1)
-ax[0, 0].set_title('TEM00')
+ax[0, 0].pcolormesh(x, y, plots_2D[0], cmap='summer', alpha=1)
+ax[0, 0].set_title(f'LG{modes_nr[0]}')
 
-ax[0, 1].pcolormesh(x, y, plots_2D[1], cmap='Spectral', alpha=1)
-ax[0, 1].set_title('TEM01')
+ax[0, 1].pcolormesh(x, y, plots_2D[1], cmap='summer', alpha=1)
+ax[0, 1].set_title(f'LG{modes_nr[1]}')
 
-ax[0, 2].pcolormesh(x, y, plots_2D[2], cmap='Spectral', alpha=1)
-ax[0, 2].set_title('TEM02')
+ax[0, 2].pcolormesh(x, y, plots_2D[2], cmap='summer', alpha=1)
+ax[0, 2].set_title(f'LG{modes_nr[2]}')
 
-ax[1, 0].pcolormesh(x, y, plots_2D[3], cmap='Spectral', alpha=1)
-ax[1, 0].set_title('TEM10')
+ax[1, 0].pcolormesh(x, y, plots_2D[3], cmap='summer', alpha=1)
+ax[1, 0].set_title(f'LG{modes_nr[3]}')
 
-ax[1, 1].pcolormesh(x, y, plots_2D[4], cmap='Spectral', alpha=1)
-ax[1, 1].set_title('TEM11')
+ax[1, 1].pcolormesh(x, y, plots_2D[4], cmap='summer', alpha=1)
+ax[1, 1].set_title(f'LG{modes_nr[4]}')
 
-ax[1, 2].pcolormesh(x, y, plots_2D[5], cmap='Spectral', alpha=1)
-ax[1, 2].set_title('TEM12')
+ax[1, 2].pcolormesh(x, y, plots_2D[5], cmap='summer', alpha=1)
+ax[1, 2].set_title(f'LG{modes_nr[5]}')
 
-ax[2, 0].pcolormesh(x, y, plots_2D[6], cmap='Spectral', alpha=1)
-ax[2, 0].set_title('TEM20')
+ax[2, 0].pcolormesh(x, y, plots_2D[6], cmap='summer', alpha=1)
+ax[2, 0].set_title(f'LG{modes_nr[6]}')
 
-ax[2, 1].pcolormesh(x, y, plots_2D[7], cmap='Spectral', alpha=1)
-ax[2, 1].set_title('TEM21')
+ax[2, 1].pcolormesh(x, y, plots_2D[7], cmap='summer', alpha=1)
+ax[2, 1].set_title(f'LG{modes_nr[7]}')
 
-ax[2, 2].pcolormesh(x, y, plots_2D[8], cmap='Spectral', alpha=1)
-ax[2, 2].set_title('TEM22')
-
+ax[2, 2].pcolormesh(x, y, plots_2D[8], cmap='summer', alpha=1)
+ax[2, 2].set_title(f'LG{modes_nr[8]}')
 
 plt.show()

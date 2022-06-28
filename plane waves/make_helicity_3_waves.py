@@ -18,13 +18,11 @@ DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
 K1, K2, K3 = rk.z_rotated_k_vectors
-k_vectors = [K1,K2,K3]
+k_vectors = [K1, K2, K3]
 E1, E2, E3 = K2, K3, K1
-e_vectors = [E1,E2,E3]
+e_vectors = [E1, E2, E3]
 
 multiple_waves = m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], [COMP_X, COMP_Y, COMP_Z], N)
-
-
 
 sim = mp.Simulation(
     cell_size=CELL,
@@ -38,7 +36,7 @@ sim = mp.Simulation(
 t = 20  # run time
 sim.run(until=t)
 
-components =[mp.Ex,mp.Ey,mp.Ez,mp.Hx,mp.Hy,mp.Hz,mp.Dielectric]
+components = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz, mp.Dielectric]
 
 Ex, Ey, Ez, Hx, Hy, Hz, eps_data = [sim.get_array(center=mp.Vector3(), size=OBS_VOL, component=i) for i in components]
 x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=OBS_VOL)
@@ -71,6 +69,22 @@ S3 = np.real(intensityNorm * 1j * (Ex * np.conjugate(Ey) - Ey * np.conjugate(Ex)
 
 helicityDensity = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
+
+def calculate_2dft(input):
+    ft = np.fft.ifftshift(input)
+    ft = np.fft.fft2(ft)
+    return np.fft.fftshift(ft)
+
+
+ft = calculate_2dft(helicityDensity)
+plt.subplot(121)
+plt.imshow(helicityDensity)
+plt.subplot(122)
+plt.imshow(abs(ft))
+# plt.xlim([480, 520])
+# plt.ylim([520, 480])  # Note, order is reversed for y
+plt.show()
+
 fig, ax = plt.subplots(3, 3, figsize=(12, 10))
 
 ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)))
@@ -96,7 +110,6 @@ for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2], ax[2, 0], ax[2, 1], ax[2,
     cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
     fig.colorbar(S_ax, cax=cbar_ax)
 fig.subplots_adjust(right=0.8)
-
 
 plt.show()
 #

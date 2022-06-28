@@ -52,15 +52,3 @@ def make_hg_beam(fcen, wavelength, arr_src_size, arr_src_cntr, dir_prop, waist, 
         center=mp.Vector3(arr_src_cntr[0], arr_src_cntr[1], arr_src_cntr[2]),
         amp_func=hg_amp_func(dir_prop, waist, wavelength, m, n, mp.Vector3(0, 0, 0)))]
     return source_hg
-
-
-def make_hg_beam_anydir(kvec, fcen, wavelength, arr_src_size, arr_src_cntr, dir_prop, waist, m, n, comp=mp.Ez):
-    source_hg = []
-    for i in kvec:
-        source_hg.append(mp.Source(
-            mp.ContinuousSource(frequency=fcen),
-            component=comp,
-            size=mp.Vector3(arr_src_size[0], arr_src_size[1], arr_src_size[2]),
-            center=mp.Vector3(arr_src_cntr[0], arr_src_cntr[1], arr_src_cntr[2]),
-            amp_func=i*hg_amp_func(dir_prop, waist, wavelength, m, n, mp.Vector3(0, 0, 0))))
-    return source_hg

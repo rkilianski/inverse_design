@@ -1,6 +1,6 @@
 import meep as mp
 import numpy as np
-import large_obs_inverse_2 as inv
+import inv_area_intns as inv
 import module_hg_beam as mhg
 from matplotlib import pyplot as plt, animation
 
