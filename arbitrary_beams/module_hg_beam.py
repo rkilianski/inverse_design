@@ -36,6 +36,53 @@ def change_coords(k_vector):
     return xp, yp, zp
 
 
+def angle_check(a, b, dim_a, dim_b, side):
+    # a,b are 2 elements of kvector, dim parameter corresponds to that element's axis, e.g. 0,1,2
+    sign = 1
+    if a / b < 0:
+        sign = -1
+    a = np.abs(a)
+    b = np.abs(b)
+    val = np.array([0, 0, 0])
+    ANGLE = np.arctan(a / b)
+    if a > b:
+        val[dim_b] = sign * (side / 2 - a / b)
+    if b > a:
+        val[dim_a] = sign * (side / 2 - np.tan(np.pi / 2 - ANGLE))
+    return val
+
+
+def place_hg_source(box_dims, k_vec):
+    kx, ky, kz = k_vec
+    sx, sy, sz = box_dims
+    box_dims = np.array(([sx, sy, sz]))
+
+    for i in range(3):
+        if k_vec[i] > 0:
+            box_dims[i] = -box_dims[i] / 2
+        else:
+            if k_vec[i] < 0:
+                box_dims[i] = box_dims[i] / 2
+            else:
+                box_dims[i] = 0
+
+    if kx != 0:
+        if ky != 0:
+            box_dims += angle_check(kx, ky, 0, 1, sx)
+            if kz != 0:
+                box_dims += angle_check(kx, kz, 0, 2, sx)
+                box_dims += angle_check(ky, kz, 1, 2, sx)
+        elif kz != 0:
+            box_dims += angle_check(kx, kz, 0, 2, sx)
+
+    else:
+        if ky != 0:
+            if kz != 0:
+                box_dims += angle_check(ky, kz, 1, 2, sx)
+    print("box_dims",box_dims)
+    return box_dims
+
+
 def hg_amp_func(dir_of_prop, waist_radius, wavelength, m, n, beam_focus=mp.Vector3()):
     """dir_of_prop takes in int: 0,1 or 2 corresponding to the propagation direction of the beam."""
 
@@ -88,24 +135,27 @@ def make_hg_beam(fcen, wavelength, arr_src_size, arr_src_cntr, dir_prop, waist, 
     return source_hg
 
 
-def make_hg_beam_any_dir(k_vec, pol_vec, fcen, wavelength, arr_src_size, arr_src_cntr, waist, m, n):
+def make_hg_beam_any_dir(k_vec, pol_vec, fcen, wavelength, arr_src_size, obs_vol, waist, m, n):
     """fcen- frequency of the beam,
        arr_src_size, arr_src_cntr - lists(or np.arrays or mp.v3) of source size and source center respectively,
        dir_prop - single int from the set 0,1,2 where they represent x, y, z direction of propagation,
        waist - float, waist of a gaussian beam,
        m, n - integers corresponding to the Hermite polynomials, i.e. H(m)H(n),
        comp - component to be excited, mp.Ez by default"""
+
+    s1, s2, s3 = place_hg_source(obs_vol, k_vec)
     source_hg = []
 
     pol_vec = pol_vec.astype('float64')
     pol_vec /= np.linalg.norm(pol_vec)
     pol_comp = [mp.Ex, mp.Ey, mp.Ez]
+
     for (element, comp) in zip(pol_vec, pol_comp):
         source_hg.append(mp.Source(
             mp.ContinuousSource(frequency=fcen),
             component=comp,
             size=mp.Vector3(arr_src_size[0], arr_src_size[1], arr_src_size[2]),
-            center=mp.Vector3(arr_src_cntr[0], arr_src_cntr[1], arr_src_cntr[2]),
+            center=mp.Vector3(s1, s2, s3),
             amp_func=hg_amp_func_any_dir(k_vec, element, waist, wavelength, m, n)))
     return source_hg[0], source_hg[1], source_hg[2]
 

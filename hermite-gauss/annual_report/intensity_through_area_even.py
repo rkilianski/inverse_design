@@ -6,8 +6,8 @@ import module_hg_beam as mhg
 from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
-RESOLUTION = 8
-ITERATIONS = 400
+RESOLUTION = 6
+ITERATIONS = 300
 T = 20
 DT = 5
 
@@ -22,7 +22,7 @@ pml_layers = [mp.PML(DPML)]
 pixel_size = 1 / RESOLUTION
 
 # Vertices of the area to be optimised ,[x0,xn,y0,z0,zn] s.t. area of (xn-x0)*(zn-z0) at level y0
-FLUX_AREA = [1, 2, -3, -0.5, 0.5]
+FLUX_AREA = [-0.5, 0.5, -3, -2.5, 2.5]
 
 # Source  points
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
@@ -44,7 +44,7 @@ material = mp.Medium(epsilon=1)
 geom_list = []
 
 # #  HG beam parameters
-M, N = 0, 0
+M, N = 2, 0
 WAVELENGTH = 1
 WAIST = 2
 freq = 1 / WAVELENGTH
@@ -289,7 +289,7 @@ ax.set_title('Intensity at the optimised wall.')
 rect = patches.Rectangle((X0, Z0), X_LENGTH, Z_LENGTH, linewidth=1, edgecolor='r', facecolor='none')
 ax.add_patch(rect)
 
-# plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
+plt.savefig(f"TEM{M}{N} at {ITERATIONS}.")
 plt.show()
 
 # ******************************************** 3D PLOTS ****************************************************************

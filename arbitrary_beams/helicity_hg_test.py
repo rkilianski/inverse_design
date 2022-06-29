@@ -5,16 +5,17 @@ import numpy as np
 import module_hg_beam as mhg
 import matplotlib.pyplot as plt
 
-DPML = 3  # thickness of PML layers
+DPML = 2  # thickness of PML layers
 COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
+VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
-WAIST = 1
-WAVELENGTH = 1
+WAIST = 10
+WAVELENGTH = 1.5
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
@@ -50,18 +51,38 @@ e_vectors = [E1, E2, E3, E4]
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
+# test bits
+K_T = np.array([1, 0, 0])
+E_T = np.array([0, 0, 1])
+wave_T = mhg.make_hg_beam_any_dir(K_T, E_T, FCEN, WAVELENGTH, [SX, SY, SZ], [-3, 0, 0], WAIST, m=0, n=0)
+########################################################################################################################
+# TWO WAVES
+########################################################################################################################
+K1 = np.array([np.sin(THETA), np.cos(THETA), 0])
+K2 = np.array([-np.sin(THETA), np.cos(THETA), 0])
 
-wave_1= mhg.make_hg_beam_any_dir(K1, E1, FCEN, WAVELENGTH, [SX, SY, SZ], [-3, -3, -3], WAIST, m=0, n=0)
-wave_2 = mhg.make_hg_beam_any_dir(K2, E2, FCEN, WAVELENGTH, [SX, SY, SZ], [3, 3, -3], WAIST, m=0, n=0)
-wave_3 = mhg.make_hg_beam_any_dir(K3, E3, FCEN, WAVELENGTH, [SX, SY, SZ], [3, -3, -3], WAIST, m=0, n=0)
-wave_4 = mhg.make_hg_beam_any_dir(K4, E4, FCEN, WAVELENGTH, [SX, SY, SZ], [-3, 3, -3], WAIST, m=0, n=0)
-waves =[wave_1,wave_2]
+E1 = np.array([0, 0, 1])
+E2 = np.array([np.cos(THETA), np.sin(THETA), 0])
+########################################################################################################################
+
+# working source coordinates
+# first = [-6 * np.tan(THETA) / 2, -3, 0]
+# second = [6 * np.tan(THETA) / 2, -6 / 2, 0]
+
+wave_1 = mhg.make_hg_beam_any_dir(K1, E1, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0,
+                                  n=0)
+wave_2 = mhg.make_hg_beam_any_dir(K2, E2, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST,
+                                  m=0, n=0)
+# wave_3 = mhg.make_hg_beam_any_dir(K3, E3, FCEN, WAVELENGTH, [SX, SY, SZ], [3, -3, -3], WAIST, m=0, n=0)
+# wave_4 = mhg.make_hg_beam_any_dir(K4, E4, FCEN, WAVELENGTH, [SX, SY, SZ], [-3, 3, -3], WAIST, m=0, n=0)
+
+waves = [wave_1, wave_2]
+# waves=[wave_3]
 all_waves = []
 
 for wave in waves:
     for element in wave:
         all_waves.append(element)
-
 
 sim = mp.Simulation(
     cell_size=CELL,
