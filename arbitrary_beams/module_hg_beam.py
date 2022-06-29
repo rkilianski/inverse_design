@@ -41,14 +41,18 @@ def angle_check(a, b, dim_a, dim_b, side):
     sign = 1
     if a / b < 0:
         sign = -1
-    a = np.abs(a)
-    b = np.abs(b)
     val = np.array([0, 0, 0])
-    ANGLE = np.arctan(a / b)
-    if a > b:
-        val[dim_b] = sign * (side / 2 - a / b)
-    if b > a:
-        val[dim_a] = sign * (side / 2 - np.tan(np.pi / 2 - ANGLE))
+    ANGLE = np.arctan(b / a)
+
+    if abs(a) > abs(b):
+        print(dim_b,"dim_b")
+        val[dim_b] = sign * (side / 2 -(b + (side/2-a))/np.tan(np.pi/2-b/a))
+        print("a>b", sign * (side / 2 -(b + (side/2-a))/np.tan(np.pi/2-b/a)))
+    if abs(b) > abs(a):
+        print(dim_a, "dim_a")
+        val[dim_a] = sign * (side / 2 - (a/b)*(side/2 - b))
+        print("a<b", sign * (side / 2 - (a/b)*(side/2 - b)))
+        print(val)
     return val
 
 
@@ -56,7 +60,7 @@ def place_hg_source(box_dims, k_vec):
     kx, ky, kz = k_vec
     sx, sy, sz = box_dims
     box_dims = np.array(([sx, sy, sz]))
-
+    print(kx, ky, kz)
     for i in range(3):
         if k_vec[i] > 0:
             box_dims[i] = -box_dims[i] / 2
@@ -79,7 +83,7 @@ def place_hg_source(box_dims, k_vec):
         if ky != 0:
             if kz != 0:
                 box_dims += angle_check(ky, kz, 1, 2, sx)
-    print("box_dims",box_dims)
+    print("box_dims", box_dims, (kx, ky, kz))
     return box_dims
 
 
