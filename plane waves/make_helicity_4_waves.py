@@ -11,7 +11,7 @@ SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell siz
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 10
+RESOLUTION = 6
 
 
 FCEN = 2 / np.pi  # pulse center frequency
@@ -28,7 +28,8 @@ K2 = C*np.array([-np.cos(THETA), -np.sin(THETA), 1])
 K3 = C*np.array([-np.cos(THETA), np.sin(THETA), 1])
 K4 = C*np.array([np.cos(THETA), -np.sin(THETA), 1])
 
-k_vectors = [K1, K2, K3, K4]
+# k_vectors = [K1, K2, K3, K4]
+k_vectors = [K1,K2]
 ########################################################################################################################
 # POLARISATION VECTORS
 ########################################################################################################################
@@ -44,7 +45,8 @@ E2 = C*amp2*np.array([-np.cos(THETA), -np.sin(THETA), -1])
 E3 = C*amp3*np.array([np.sin(THETA), -np.cos(THETA), 1])
 E4 = C*amp4*np.array([-np.sin(THETA), np.cos(THETA), 1])
 
-e_vectors = [E1,E2,E3,E4]
+# e_vectors = [E1,E2,E3,E4]
+e_vectors =[E1,E2]
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
