@@ -11,7 +11,7 @@ SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2* DPML  # cell size
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(8, 8, 8)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 12
+RESOLUTION = 10
 
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth

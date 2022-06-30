@@ -21,32 +21,30 @@ N = 1  # refractive index of material containing the source
 ########################################################################################################################
 # K-VECTORS
 ########################################################################################################################
-THETA = np.pi / 6
-C = np.sqrt(2)/2
-K1 = C*np.array([np.cos(THETA), np.sin(THETA), 1])
-K2 = C*np.array([-np.cos(THETA), -np.sin(THETA), 1])
-K3 = C*np.array([-np.cos(THETA), np.sin(THETA), 1])
-K4 = C*np.array([np.cos(THETA), -np.sin(THETA), 1])
+THETA = np.pi / 3
+C = 1
+K1 = C * np.array([np.cos(THETA), np.sin(THETA), 0])
+K2 = C * np.array([np.cos(THETA), -np.sin(THETA), 0])
+K3 = C * np.array([-np.cos(THETA), np.sin(THETA), 0])
+K4 = C * np.array([-np.cos(THETA), -np.sin(THETA), 0])
 
 k_vectors = [K1, K2, K3, K4]
-# k_vectors = [K1,K2]
 ########################################################################################################################
 # POLARISATION VECTORS
 ########################################################################################################################
-delta_phi = 0
 amp1 = 1
+amp2 = 1
 a3 = 1
-amp2 = np.conjugate(amp1)*(a3/np.conjugate(a3))*np.exp(1j*delta_phi)
-amp3 = a3
-amp4 = a3*np.exp(1j*delta_phi)
+a4 = 1
+amp3 = -amp1*np.conjugate(amp2)*np.sign(np.cos(2*THETA))/(np.conjugate(a4)*np.sqrt(np.abs(np.cos(2*THETA))))
+amp4 = a4/(np.sqrt(np.abs(np.cos(2*THETA))))
 
-E1 = C*amp1*np.array([-np.cos(THETA), -np.sin(THETA), 1])
-E2 = C*amp2*np.array([-np.cos(THETA), -np.sin(THETA), -1])
-E3 = C*amp3*np.array([np.sin(THETA), -np.cos(THETA), 1])
-E4 = C*amp4*np.array([-np.sin(THETA), np.cos(THETA), 1])
+E1 = C * amp1 * np.array([0, 0, 1])
+E2 = C * amp2 * np.array([0, 0, 1])
+E3 = C * amp3 * np.array([np.sin(THETA), np.cos(THETA), 0])
+E4 = C * amp4 * np.array([-np.sin(THETA), np.cos(THETA), 0])
 
-e_vectors = [E1,E2,E3,E4]
-# e_vectors =[E1,E2]
+e_vectors = [E1, E2, E3, E4]
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
