@@ -15,7 +15,7 @@ PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
 WAIST = 12
-WAVELENGTH = 1.8
+WAVELENGTH = 0.8
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source

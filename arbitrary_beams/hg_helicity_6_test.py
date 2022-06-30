@@ -6,16 +6,15 @@ import rotation_kvectors as rk
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
+COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
-VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
 WAIST = 12
-WAVELENGTH = 1.4
+WAVELENGTH = 1.6
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
@@ -24,18 +23,51 @@ N = 1  # refractive index of material containing the source
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
-K1, K2, K3 = rk.z_rotated_k_vectors
-k_vectors = [K1, K2, K3]
-E1, E2, E3 = K2, K3, K1
-e_vectors = [E1, E2, E3]
-print( k_vectors)
+########################################################################################################################
+# K-VECTORS
+########################################################################################################################
+THETA = 2 * np.pi / 3
+C = 1
+K1 = C * np.array([1, 0, 0])
+K2 = C * np.array([np.cos(THETA), np.sin(THETA), 0])
+K3 = C * np.array([np.cos(THETA), -np.sin(THETA), 0])
+K4 = C * np.array([-1, 0, 0])
+K5 = C * np.array([-np.cos(THETA), -np.sin(THETA), 0])
+K6 = C * np.array([-np.cos(THETA), np.sin(THETA), 0])
+
+k_vectors = [K1, K2, K3, K4, K5, K6]
+########################################################################################################################
+# POLARISATION VECTORS
+########################################################################################################################
+
+amp1 = 1
+amp2 = 2
+amp3 = 2
+amp4 = -np.conjugate(amp1) * np.sqrt(np.abs(np.cos(2 * THETA))) / np.cos(THETA)
+amp5 = np.conjugate(amp2) / np.sqrt(np.abs(np.cos(2 * THETA)))
+amp6 = np.conjugate(amp3) / np.sqrt(np.abs(np.cos(2 * THETA)))
+
+E1 = amp1 * np.array([0, 0, 1])
+E2 = amp2 * np.array([0, 0, 1])
+E3 = amp3 * np.array([0, 0, 1])
+E4 = amp4 * np.array([0, -1, 0])
+E5 = amp5 * np.array([np.sin(THETA), -np.cos(THETA), 0])
+E6 = amp6 * np.array([-np.sin(THETA), -np.cos(THETA), 0])
+
+e_vectors = [E1, E2, E3, E4, E5, E6]
+########################################################################################################################
+########################################################################################################################
+# WAVES
+########################################################################################################################
 
 wave_1 = mhg.make_hg_beam_any_dir(K1, E1, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 wave_2 = mhg.make_hg_beam_any_dir(K2, E2, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 wave_3 = mhg.make_hg_beam_any_dir(K3, E3, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+wave_4 = mhg.make_hg_beam_any_dir(K4, E4, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+wave_5 = mhg.make_hg_beam_any_dir(K5, E5, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+wave_6 = mhg.make_hg_beam_any_dir(K6, E6, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 
-
-waves = [wave_1,wave_2,wave_3]
+waves = [wave_1, wave_2, wave_3, wave_4]
 
 all_waves = []
 

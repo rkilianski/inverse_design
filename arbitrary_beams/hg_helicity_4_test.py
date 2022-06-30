@@ -10,12 +10,11 @@ COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not 
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
-VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
 WAIST = 12
-WAVELENGTH = 1.4
+WAVELENGTH = 1
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
@@ -24,18 +23,44 @@ N = 1  # refractive index of material containing the source
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
-K1, K2, K3 = rk.z_rotated_k_vectors
-k_vectors = [K1, K2, K3]
-E1, E2, E3 = K2, K3, K1
-e_vectors = [E1, E2, E3]
-print( k_vectors)
+########################################################################################################################
+# K-VECTORS
+########################################################################################################################
+THETA = np.pi / 6
+C = np.sqrt(2)/2
+K1 = C*np.array([np.cos(THETA), np.sin(THETA), 1])
+K2 = C*np.array([-np.cos(THETA), -np.sin(THETA), 1])
+K3 = C*np.array([-np.cos(THETA), np.sin(THETA), 1])
+K4 = C*np.array([np.cos(THETA), -np.sin(THETA), 1])
+
+k_vectors = [K1, K2, K3, K4]
+
+########################################################################################################################
+# POLARISATION VECTORS
+########################################################################################################################
+delta_phi = 0
+amp1 = 1
+a3 = 1
+amp2 = np.conjugate(amp1)*(a3/np.conjugate(a3))*np.exp(1j*delta_phi)
+amp3 = a3
+amp4 = a3*np.exp(1j*delta_phi)
+
+E1 = C*amp1*np.array([-np.cos(THETA), -np.sin(THETA), 1])
+E2 = C*amp2*np.array([-np.cos(THETA), -np.sin(THETA), -1])
+E3 = C*amp3*np.array([np.sin(THETA), -np.cos(THETA), 1])
+E4 = C*amp4*np.array([-np.sin(THETA), np.cos(THETA), 1])
+
+e_vectors = [E1,E2,E3,E4]
+########################################################################################################################
+# WAVES
+########################################################################################################################
 
 wave_1 = mhg.make_hg_beam_any_dir(K1, E1, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 wave_2 = mhg.make_hg_beam_any_dir(K2, E2, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 wave_3 = mhg.make_hg_beam_any_dir(K3, E3, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+wave_4 = mhg.make_hg_beam_any_dir(K4, E4, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 
-
-waves = [wave_1,wave_2,wave_3]
+waves = [wave_1, wave_2, wave_3, wave_4]
 
 all_waves = []
 
