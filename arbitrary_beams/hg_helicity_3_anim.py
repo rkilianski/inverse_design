@@ -12,7 +12,7 @@ CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 6
+RESOLUTION = 10
 
 WAIST = 12
 WAVELENGTH = 1.4
@@ -31,7 +31,7 @@ e_vectors = [E1, E2, E3]
 
 all_waves = []
 helicity_anim = []
-wavelengths = np.arange(1, 1.3, 0.1)
+wavelengths = np.arange(0.8, 2, 0.1)
 ITERATIONS = len(wavelengths)
 SLICE_POSITION = 20
 SLICE_AXIS = 2
@@ -88,17 +88,18 @@ for i in range(ITERATIONS):
 # PLOTS AND METADATA
 ########################################################################################################################
 
-plt.rcParams["figure.figsize"] = [6.00, 6.00]
+plt.rcParams["figure.figsize"] = [8.00, 8.00]
 plt.rcParams["figure.autolayout"] = True
 fig_a, ax_a = plt.subplots()
 
-intns = ax_a.pcolormesh(x, y, np.transpose(helicity_anim[0]))
+intns = ax_a.pcolormesh(x, y, np.transpose(helicity_anim[0]), vmax=1, vmin=-1, cmap='RdYlBu')
 # ax_a.plot(x[x_obs_index], y[y_obs_index], 'ro')
 fig_a.colorbar(intns)
 
 
 def animate(i):
     intns.set_array(np.transpose(helicity_anim[i][:, :]).flatten())
+    ax_a.set_title(f"Wavelength:: {wavelengths[i]}")
 
 
 anim = animation.FuncAnimation(fig_a, animate, interval=100, frames=ITERATIONS)
