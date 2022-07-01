@@ -4,6 +4,11 @@ from scipy import special
 
 
 def change_coords(k_vector):
+    """ Helper function to the hg_amp function. Takes in a propagation direction k-vector, and rotates the axes to align
+    the propagation direction with the z-axis; the Hermite polynomial functions are accordingly rotated to be
+     perpendicular to k.
+     Returns the 3 rotated axes."""
+
     k_vector = k_vector.astype('float64')
     k_vector /= np.linalg.norm(k_vector)
     kx, ky, kz = k_vector
@@ -36,36 +41,11 @@ def change_coords(k_vector):
     return xp, yp, zp
 
 
-# def angle_check(a, b, dim_a, dim_b, side):
-#     # a,b are 2 elements of kvector, dim parameter corresponds to that element's axis, e.g. 0,1,2
-#     val = np.array([0.0, 0.0, 0.0])
-#     A = abs(a)
-#     B = abs(b)
-#     if A > B:
-#         x = (B / A) * (side / 2 - A)
-#         if b < 0:
-#             val[dim_b] = x + B
-#         else:
-#             val[dim_b] = side / 2 - (x + B)
-#         if a < 0:
-#             val[dim_a] = side
-#         print(dim_b, "dim_b")
-#         print("a>b", side / 2 - (x + B))
-#     if B > A:
-#         x = (A / B) * (side / 2 - B)
-#         print(dim_a, "dim_a")
-#         if a < 0:
-#             val[dim_a] = x + A
-#         else:
-#             val[dim_a] = side / 2 - (x + A)
-#         if b < 0:
-#             val[dim_b] = side
-#         print("a<b", side / 2 - (x + A))
-#         print(val)
-#     return val
-
-
 def place_hg_source(box, k_vec):
+    """ Situates the source so the given k-vector passes through the origin.
+    Takes the dimensions of the simulation box- box(arr),
+    and the k-vector(arr).
+    Returns the 3D array source using meep's convention and putting the origin at the centre of the box."""
     # works for a cubic box
     side, _, _ = box
     indices = [0, 1, 2]
@@ -78,39 +58,8 @@ def place_hg_source(box, k_vec):
     lam = (boundary + largest) / largest
     for i in indices:
         source[i] = k_vec[i] * (lam - 1)
-    print("source",source)
+    print("source", source)
     return source
-
-
-# def place_hg_source(box_dims, k_vec):
-#     kx, ky, kz = k_vec
-#     sx, sy, sz = box_dims
-#     box_dims = np.array(([sx, sy, sz]))
-#     print(kx, ky, kz)
-#     for i in range(3):
-#         if k_vec[i] > 0:
-#             box_dims[i] = -box_dims[i] / 2
-#         else:
-#             if k_vec[i] < 0:
-#                 box_dims[i] = 0
-#             else:
-#                 box_dims[i] = 0
-#
-#     if kx != 0:
-#         if ky != 0:
-#             box_dims += angle_check(kx, ky, 0, 1, sx)
-#             if kz != 0:
-#                 box_dims += angle_check(kx, kz, 0, 2, sx)
-#                 box_dims += angle_check(ky, kz, 1, 2, sx)
-#         elif kz != 0:
-#             box_dims += angle_check(kx, kz, 0, 2, sx)
-#
-#     else:
-#         if ky != 0:
-#             if kz != 0:
-#                 box_dims += angle_check(ky, kz, 1, 2, sx)
-#     print("box_dims", box_dims, (kx, ky, kz))
-#     return box_dims
 
 
 def hg_amp_func(dir_of_prop, waist_radius, wavelength, m, n, beam_focus=mp.Vector3()):
@@ -216,7 +165,12 @@ def make_hg_beam_any_dir_T(k_vec, pol_vec, fcen, wavelength, arr_src_size, coord
 
 
 def hg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, m, n):
-    """dir_of_prop takes in int: 0,1 or 2 corresponding to the propagation direction of the beam."""
+    """Generates the HG amplitude function in a given direction.
+    Takes: k_vector - dir. of propagation(arr),
+    pol_amp - polarisation(arr),
+    waist_radius - Gaussian beam waist,
+    wavelength(float),
+    m,n(int) - orders of Hermite polynomial in x and y directions, respectively"""
     xp, yp, zp = change_coords(k_vector)  # new co-ords are normalised vectors,i.e x1 = [v1,v2,v3]
 
     def _hermite_fun(n_val, m_val):
@@ -245,3 +199,14 @@ def hg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, m, n):
         return hg_beam
 
     return _hg_profile
+
+
+def make_multiple_hg_beams(k_vec_arr, pol_arr, fcen, wavelength, box, obs_vol, waist, m, n):
+    beams = []
+    beams_sep =[]
+    for k, e in zip(k_vec_arr, pol_arr):
+        beams.append(make_hg_beam_any_dir(k, e, fcen, wavelength, box, obs_vol, waist, m=m, n=n))
+    for beam in beams:
+        for element in beam:
+            beams_sep.append(element)
+    return beams_sep

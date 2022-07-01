@@ -30,18 +30,20 @@ E1, E2, E3 = K2, K3, K1
 e_vectors = [E1, E2, E3]
 print( k_vectors)
 
-wave_1 = mhg.make_hg_beam_any_dir(K1, E1, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
-wave_2 = mhg.make_hg_beam_any_dir(K2, E2, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
-wave_3 = mhg.make_hg_beam_any_dir(K3, E3, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+# wave_1 = mhg.make_hg_beam_any_dir(K1, E1, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+# wave_2 = mhg.make_hg_beam_any_dir(K2, E2, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+# wave_3 = mhg.make_hg_beam_any_dir(K3, E3, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+#
+#
+# waves = [wave_1,wave_2,wave_3]
+#
+# all_waves = []
+#
+# for wave in waves:
+#     for element in wave:
+#         all_waves.append(element)
 
-
-waves = [wave_1,wave_2,wave_3]
-
-all_waves = []
-
-for wave in waves:
-    for element in wave:
-        all_waves.append(element)
+all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
 
 sim = mp.Simulation(
     cell_size=CELL,
