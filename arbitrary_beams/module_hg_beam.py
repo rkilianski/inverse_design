@@ -130,38 +130,14 @@ def make_hg_beam_any_dir(k_vec, pol_vec, fcen, wavelength, arr_src_size, obs_vol
     pol_comp = [mp.Ex, mp.Ey, mp.Ez]
 
     for (element, comp) in zip(pol_vec, pol_comp):
-        source_hg.append(mp.Source(
-            mp.ContinuousSource(frequency=fcen),
-            component=comp,
-            size=mp.Vector3(arr_src_size[0], arr_src_size[1], arr_src_size[2]),
-            center=mp.Vector3(s1, s2, s3),
-            amp_func=hg_amp_func_any_dir(k_vec, element, waist, wavelength, m, n)))
-    return source_hg[0], source_hg[1], source_hg[2]
-
-
-def make_hg_beam_any_dir_T(k_vec, pol_vec, fcen, wavelength, arr_src_size, coords, waist, m, n):
-    """fcen- frequency of the beam,
-       arr_src_size, arr_src_cntr - lists(or np.arrays or mp.v3) of source size and source center respectively,
-       dir_prop - single int from the set 0,1,2 where they represent x, y, z direction of propagation,
-       waist - float, waist of a gaussian beam,
-       m, n - integers corresponding to the Hermite polynomials, i.e. H(m)H(n),
-       comp - component to be excited, mp.Ez by default"""
-
-    s1, s2, s3 = coords
-    source_hg = []
-
-    pol_vec = pol_vec.astype('float64')
-    pol_vec /= np.linalg.norm(pol_vec)
-    pol_comp = [mp.Ex, mp.Ey, mp.Ez]
-
-    for (element, comp) in zip(pol_vec, pol_comp):
-        source_hg.append(mp.Source(
-            mp.ContinuousSource(frequency=fcen),
-            component=comp,
-            size=mp.Vector3(arr_src_size[0], arr_src_size[1], arr_src_size[2]),
-            center=mp.Vector3(s1, s2, s3),
-            amp_func=hg_amp_func_any_dir(k_vec, element, waist, wavelength, m, n)))
-    return source_hg[0], source_hg[1], source_hg[2]
+        if element != 0:
+            source_hg.append(mp.Source(
+                mp.ContinuousSource(frequency=fcen),
+                component=comp,
+                size=mp.Vector3(arr_src_size[0], arr_src_size[1], arr_src_size[2]),
+                center=mp.Vector3(s1, s2, s3),
+                amp_func=hg_amp_func_any_dir(k_vec, element, waist, wavelength, m, n)))
+    return source_hg
 
 
 def hg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, m, n):
@@ -185,7 +161,7 @@ def hg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, m, n):
         k = 2 * np.pi / wavelength
         z_R = np.pi * (waist_radius ** 2) / wavelength
 
-        w = waist_radius * np.sqrt(1 + np.abs(prop_dir) / z_R)
+        w = waist_radius * np.sqrt(1 + (prop_dir / z_R) ** 2)
 
         h_n, h_m = _hermite_fun(n, m)
 
@@ -203,10 +179,11 @@ def hg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, m, n):
 
 def make_multiple_hg_beams(k_vec_arr, pol_arr, fcen, wavelength, box, obs_vol, waist, m, n):
     beams = []
-    beams_sep =[]
+    beams_sep = []
     for k, e in zip(k_vec_arr, pol_arr):
         beams.append(make_hg_beam_any_dir(k, e, fcen, wavelength, box, obs_vol, waist, m=m, n=n))
     for beam in beams:
         for element in beam:
             beams_sep.append(element)
+
     return beams_sep

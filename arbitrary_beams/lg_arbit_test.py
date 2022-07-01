@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-import module_hg_beam as mhg
+import module_lg_beam_any as mlg
 import meep as mp
 import numpy as np
 
@@ -22,20 +22,20 @@ sy = CELL_Y + 2 * DPML
 sz = CELL_Z + 2 * DPML
 
 cell_3d = mp.Vector3(sx, sy, sz)
-obs_vol = mp.Vector3(OBS_X_A, OBS_Y_A, OBS_Z_A)
+OBS_VOL = mp.Vector3(OBS_X_A, OBS_Y_A, OBS_Z_A)
 
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 
 MATERIAL = mp.Medium(epsilon=1)
-M, N = 0, 0
+L, P = 0,0
 WAVELENGTH = 1
-WAIST = 2
+WAIST = 3
 
 plots_2D = []
 
 
 def get_fields(simulation, slice_axis, which_point):
-    fields_data = [simulation.get_array(center=mp.Vector3(), size=obs_vol, component=field) for field in
+    fields_data = [simulation.get_array(center=mp.Vector3(), size=OBS_VOL, component=field) for field in
                    [mp.Ex, mp.Ey, mp.Ez]]
     fields_data_elements = [element[1:-1, 1:-1, 1:-1] for element in fields_data]
     fields_2D = [[a[which_point, :, :], a[:, which_point, :], a[:, :, which_point]][slice_axis]
@@ -48,8 +48,9 @@ def get_fields(simulation, slice_axis, which_point):
 K_VEC = np.array([1, 0, 0])
 POL_VEC = np.array([0, 0, 1])
 
-beams = mhg.make_hg_beam_any_dir(K_VEC, POL_VEC, FCEN, WAVELENGTH, [sx, sy, sz], obs_vol, waist=WAIST,
-                                 m=0, n=0)
+beams = mlg.make_lg_beam_any_dir(K_VEC, POL_VEC, FCEN, WAVELENGTH, [sx, sy, sz], OBS_VOL, waist=WAIST,
+                                 l=L, p=P)
+
 sim = mp.Simulation(
     cell_size=cell_3d,
     sources=beams,
@@ -63,7 +64,7 @@ sim = mp.Simulation(
 
 sim.run(until=20)
 
-x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=obs_vol)
+x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=OBS_VOL)
 [x, y, z] = [coordinate[1:-1] for coordinate in [x, y, z]]
 Ex, Ey, Ez = get_fields(sim, SLICE_AXIS, CHOSEN_POINT)
 e_squared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
@@ -71,16 +72,9 @@ plots_2D.append(e_squared)
 
 # fig, ax = plt.subplots(1, 1, figsize=(12, 12))
 
-plt.pcolormesh(x, y, np.transpose(plots_2D[0]), alpha=1)
+plt.pcolormesh(x, y, np.transpose(plots_2D[0]),cmap='Spectral', alpha=1)
 
-# ax[0, 1].pcolormesh(x, y, plots_2D[0], cmap='Spectral', alpha=1)
-# ax[0, 1].set_title('TEM01')
 
-# ax[0, 2].pcolormesh(x, y, plots_2D, cmap='Spectral', alpha=1)
-# ax[0, 2].set_title('TEM02')
-#
-# ax[1, 0].pcolormesh(x, y, plots_2D, cmap='Spectral', alpha=1)
-# ax[1, 0].set_title('TEM10')
 
 
 plt.show()

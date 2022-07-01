@@ -1,7 +1,7 @@
 """Script simulating helicity lattice in vacuum using 3 HG beams.  """
 import meep as mp
 import numpy as np
-import module_hg_beam as mhg
+import module_lg_beam_any as mlg
 import rotation_kvectors as rk
 import matplotlib.pyplot as plt
 
@@ -14,7 +14,7 @@ VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
-WAIST = 12
+WAIST = 8
 WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
@@ -26,13 +26,13 @@ N = 1  # refractive index of material containing the source
 T = 20  # run time
 K1, K2, K3 = rk.z_rotated_k_vectors
 # k_vectors = [K1, K2, K3]
-k_vectors = [np.array([1,0,0])]
+k_vectors = [np.array([1, 0, 0])]
 E1, E2, E3 = K2, K3, K1
 # e_vectors = [E1, E2, E3]
-e_vectors = [np.array([0,0,1])]
-print( k_vectors)
+e_vectors = [np.array([0, 0, 1])]
+print(k_vectors)
 
-all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=0, p=0)
 
 sim = mp.Simulation(
     cell_size=CELL,

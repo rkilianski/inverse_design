@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 
 import module_lg_beam as mlg
-import module_hg_beam as mhg
 import meep as mp
 import numpy as np
 
@@ -85,8 +84,9 @@ x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=obs_vol)
 [x, y, z] = [coordinate[1:-1] for coordinate in [x, y, z]]
 Ex, Ey, Ez = get_fields(sim, SLICE_AXIS, CHOSEN_POINT)
 e_squared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
-amp_squared = np.sqrt(Ex*Ex + Ey*Ey + Ez*Ez)
-arg = np.angle(amp_squared)
+amp_real= np.real(Ex+Ey+Ez)
+amp_imag = np.imag(Ex+Ey+Ez)
+arg = amp_imag/amp_real
 plots_2D.append(e_squared)
 
 fig, ax = plt.subplots(2, 2, figsize=(12, 12))
