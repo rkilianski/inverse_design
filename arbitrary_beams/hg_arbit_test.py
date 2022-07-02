@@ -69,18 +69,10 @@ Ex, Ey, Ez = get_fields(sim, SLICE_AXIS, CHOSEN_POINT)
 e_squared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
 plots_2D.append(e_squared)
 
-# fig, ax = plt.subplots(1, 1, figsize=(12, 12))
 
 plt.pcolormesh(x, y, np.transpose(plots_2D[0]), alpha=1)
 
-# ax[0, 1].pcolormesh(x, y, plots_2D[0], cmap='Spectral', alpha=1)
-# ax[0, 1].set_title('TEM01')
 
-# ax[0, 2].pcolormesh(x, y, plots_2D, cmap='Spectral', alpha=1)
-# ax[0, 2].set_title('TEM02')
-#
-# ax[1, 0].pcolormesh(x, y, plots_2D, cmap='Spectral', alpha=1)
-# ax[1, 0].set_title('TEM10')
 
 
 plt.show()

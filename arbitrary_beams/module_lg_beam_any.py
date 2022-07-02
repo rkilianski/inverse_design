@@ -94,7 +94,7 @@ def lg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, p, l):
         lag_fun = norm_constant * l_lp(2 * r_squared / w ** 2) * (waist_radius / w) * ((r * np.sqrt(2) / w) ** l_abs)
 
         exp_fun = np.exp(-r_squared / (w ** 2)) * np.exp(-1j * k * R_inv) * np.exp(-1j * l * phi) * np.exp(
-            1j * (psi + k * z_dir))
+            1j * (psi - k * z_dir))
 
         lg_beam = pol_amp * lag_fun * exp_fun
 
