@@ -5,7 +5,7 @@ import meep as mp
 import numpy as np
 
 RESOLUTION = 6
-SLICE_AXIS = 2
+SLICE_AXIS = 0
 CHOSEN_POINT = 20
 
 DPML = 2  # thickness of perfectly matched layers (PMLs) around the box
@@ -46,7 +46,7 @@ def get_fields(simulation, slice_axis, which_point):
 
 
 K_VEC = np.array([1, 0, 0])
-POL_VEC = np.array([0, 0, 1])
+POL_VEC = np.array([1 + 1j, 0, 0])
 
 beams = mlg.make_lg_beam_any_dir(K_VEC, POL_VEC, FCEN, WAVELENGTH, [sx, sy, sz], OBS_VOL, waist=WAIST,
                                  l=L, p=P)
