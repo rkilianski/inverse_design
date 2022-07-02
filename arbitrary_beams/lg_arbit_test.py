@@ -45,7 +45,7 @@ def get_fields(simulation, slice_axis, which_point):
     return fields_2D
 
 
-K_VEC = np.array([1, 0, 0])
+K_VEC = np.array([1, 1, 0])
 POL_VEC = np.array([0, 0, 1])
 
 beams = mlg.make_lg_beam_any_dir(K_VEC, POL_VEC, FCEN, WAVELENGTH, [sx, sy, sz], OBS_VOL, waist=WAIST,

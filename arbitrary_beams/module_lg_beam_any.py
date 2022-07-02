@@ -73,7 +73,6 @@ def lg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, p, l):
         return special.genlaguerre(p_val, alpha_val)
 
     def _lg_profile(mp_pos):
-
         z_dir = xp[0] * mp_pos[0] + xp[1] * mp_pos[1] + xp[2] * mp_pos[2]
         x_profile = yp[0] * mp_pos[0] + yp[1] * mp_pos[1] + yp[2] * mp_pos[2]
         y_profile = zp[0] * mp_pos[0] + zp[1] * mp_pos[1] + zp[2] * mp_pos[2]
@@ -84,17 +83,18 @@ def lg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, p, l):
         k = 2 * np.pi / wavelength
         z_R = np.pi * (waist_radius ** 2) / wavelength
         R_inv = r_squared * z_dir / (2 * (z_dir ** 2 + z_R ** 2))
-        w = waist_radius * np.sqrt(1 + (z_dir / z_R)**2)
+        w = waist_radius * np.sqrt(1 + (z_dir / z_R) ** 2)
 
         norm_constant = np.sqrt(2 * special.factorial(p) / (np.pi * (special.factorial(p + l_abs))))
         l_lp = _laguerre_fun(p, l_abs)
 
-        psi = (l_abs + 2 * p + 1) * np.arctan(z_dir/z_R)
+        psi = (l_abs + 2 * p + 1) * np.arctan(z_dir / z_R)
         phi = np.arctan2(x_profile, y_profile)
 
         lag_fun = norm_constant * l_lp(2 * r_squared / w ** 2) * (waist_radius / w) * ((r * np.sqrt(2) / w) ** l_abs)
 
-        exp_fun = np.exp(-r_squared / (w ** 2)) * np.exp(-1j * k * R_inv) * np.exp(-1j * l * phi) * np.exp(1j * psi)
+        exp_fun = np.exp(-r_squared / (w ** 2)) * np.exp(-1j * k * R_inv) * np.exp(-1j * l * phi) * np.exp(
+            1j * (psi + k * z_dir))
 
         lg_beam = pol_amp * lag_fun * exp_fun
 
