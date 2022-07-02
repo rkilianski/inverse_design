@@ -14,6 +14,7 @@ VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
+L, P = 1, 1
 WAIST = 8
 WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
@@ -25,14 +26,14 @@ N = 1  # refractive index of material containing the source
 ########################################################################################################################
 T = 20  # run time
 K1, K2, K3 = rk.z_rotated_k_vectors
-# k_vectors = [K1, K2, K3]
-k_vectors = [np.array([1, 0, 0])]
+k_vectors = [K1, K2, K3]
+
 E1, E2, E3 = K2, K3, K1
-# e_vectors = [E1, E2, E3]
-e_vectors = [np.array([0, 0, 1])]
+e_vectors = [E1, E2, E3]
+
 print(k_vectors)
 
-all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=0, p=0)
+all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
 
 sim = mp.Simulation(
     cell_size=CELL,
@@ -69,47 +70,33 @@ Ex, Ey, Ez, Hx, Hy, Hz, eps_data = [[a[chosen_slice, :, :], a[:, chosen_slice, :
                                     for a
                                     in [Ex, Ey, Ez, Hx, Hy, Hz, eps_data]]
 
-eps_data = np.ma.masked_array(eps_data, eps_data < np.sqrt(1.4))
-
 intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
 
-ESquared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
-HSquared = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
-
-S0 = np.real(intensityNorm * (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey)))
-S1 = np.real(intensityNorm * (Ex * np.conjugate(Ex) - Ey * np.conjugate(Ey)))
-S2 = np.real(intensityNorm * (Ex * np.conjugate(Ey) + Ey * np.conjugate(Ex)))
-S3 = np.real(intensityNorm * 1j * (Ex * np.conjugate(Ey) - Ey * np.conjugate(Ex)))
-
+e_sq = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
+h_sq = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
 helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-fig, ax = plt.subplots(3, 3, figsize=(12, 10))
+fig, ax = plt.subplots(3, 3, figsize=(8, 12))
 
-ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)))
-ax[0, 0].set_title('Ex')
-ax[0, 0].pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
+ax[0, 0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
+ax[0, 0].set_title(f'Helicity Density using beam LG{L}{P}')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(np.real(Ey)))
-ax[0, 1].set_title('Ey')
-ax[0, 1].pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
+ax[0, 1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
+ax[0, 1].set_title('Intensity')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(np.real(Ez)))
-ax[0, 2].set_title('Ez')
-ax[0, 2].pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
+ax[0, 2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
+ax[0, 2].set_title('H Squared')
 
-i = 0
-
-for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2], ax[2, 0], ax[2, 1], ax[2, 2]],
-                        [ESquared, HSquared, helicity_density, S1, S2, S3],
-                        ['E field Intensity', 'H field Intensity', "Helicity density", 'S1', 'S2', 'S3']):
-    S_ax = ax.pcolormesh(x, y, np.transpose(Si), vmax=1, vmin=-1, cmap='RdYlBu')
-    ax.pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
-    ax.set_title(name)
-    cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
-    fig.colorbar(S_ax, cax=cbar_ax)
-fig.subplots_adjust(right=0.8)
+# i = 0
+#
+# for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2], ax[2, 0], ax[2, 1], ax[2, 2]],
+#                         [ESquared, HSquared, helicity_density, S1, S2, S3],
+#                         ['E field Intensity', 'H field Intensity', "Helicity density", 'S1', 'S2', 'S3']):
+#     S_ax = ax.pcolormesh(x, y, np.transpose(Si), vmax=1, vmin=-1, cmap='RdYlBu')
+#     ax.pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
+#     ax.set_title(name)
+#     cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
+#     fig.colorbar(S_ax, cax=cbar_ax)
+# fig.subplots_adjust(right=0.8)
 
 plt.show()
-#
-# plt.pcolormesh(helicityDensity, vmin=-1, vmax=1, cmap='RdYlBu')
-# plt.show()
