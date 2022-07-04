@@ -2,6 +2,7 @@
 import meep as mp
 import numpy as np
 import module_lg_beam_any as mlg
+import plane_rotator as pr
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
@@ -12,7 +13,7 @@ OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
-L, P = 1, 1
+L, P = 0, 0
 WAIST = 8
 WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
@@ -22,12 +23,13 @@ N = 1  # refractive index of material containing the source
 ########################################################################################################################
 # K-VECTORS
 ########################################################################################################################
-THETA = np.pi / 6
-C = np.sqrt(2) / 2
-K1 = C * np.array([np.cos(THETA), np.sin(THETA), 1])
-K2 = C * np.array([-np.cos(THETA), -np.sin(THETA), 1])
-K3 = C * np.array([-np.cos(THETA), np.sin(THETA), 1])
-K4 = C * np.array([np.cos(THETA), -np.sin(THETA), 1])
+C = 1
+THETA = np.pi / 3
+
+K1 = C * np.array([np.cos(THETA), np.sin(THETA), 0])
+K2 = C * np.array([np.cos(THETA), -np.sin(THETA), 0])
+K3 = C * np.array([0, np.sin(THETA), np.cos(THETA)])
+K4 = C * np.array([0, -np.sin(THETA), np.cos(THETA)])
 
 k_vectors = [K1, K2, K3, K4]
 
@@ -48,12 +50,15 @@ E4 = C * amp4 * np.array([-np.sin(THETA), np.cos(THETA), 1])
 
 e_vectors = [E1, E2, E3, E4]
 
+# rotated k vectors and e vectors
+k_on_plane, e_rotated = pr.find_angles_and_rotate(k_vectors, e_vectors, 2)
+
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
 
-all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
+all_waves = mlg.make_multiple_lg_beams(k_on_plane, e_rotated, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
 
 sim = mp.Simulation(
     cell_size=CELL,
@@ -106,6 +111,5 @@ ax[0, 1].set_title('Intensity')
 
 ax[0, 2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
 ax[0, 2].set_title('H Squared')
-
 
 plt.show()

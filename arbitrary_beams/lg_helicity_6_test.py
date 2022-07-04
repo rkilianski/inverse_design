@@ -2,51 +2,30 @@
 import meep as mp
 import numpy as np
 import module_lg_beam_any as mlg
+import set_waves_module as sw
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
+COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
-OBS_VOL = mp.Vector3(6, 6, 6)
+OBS_VOL = mp.Vector3(8,8,8)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 6
+RESOLUTION = 10
 
-L, P = 1, 1
-WAIST = 8
-WAVELENGTH = 1.4
+L, P = 0, 0
+WAIST = 4
+WAVELENGTH = 1
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
 ########################################################################################################################
-# K-VECTORS
+# SET UP WAVES
 ########################################################################################################################
-THETA = np.pi / 6
+THETA = 2 * np.pi / 3 - 0.005
 C = 1
-K1 = C * np.array([1, 0, 0])
-K2 = C * np.array([-np.cos(THETA), -np.sin(THETA), 1])
-K3 = C * np.array([-np.cos(THETA), np.sin(THETA), 1])
-K4 = C * np.array([np.cos(THETA), -np.sin(THETA), 1])
-
-k_vectors = [K1, K2, K3, K4]
-
-########################################################################################################################
-# POLARISATION VECTORS
-########################################################################################################################
-delta_phi = 0
-amp1 = 1
-a3 = 1
-amp2 = np.conjugate(amp1) * (a3 / np.conjugate(a3)) * np.exp(1j * delta_phi)
-amp3 = a3
-amp4 = a3 * np.exp(1j * delta_phi)
-
-E1 = C * amp1 * np.array([-np.cos(THETA), -np.sin(THETA), 1])
-E2 = C * amp2 * np.array([-np.cos(THETA), -np.sin(THETA), -1])
-E3 = C * amp3 * np.array([np.sin(THETA), -np.cos(THETA), 1])
-E4 = C * amp4 * np.array([-np.sin(THETA), np.cos(THETA), 1])
-
-e_vectors = [E1, E2, E3, E4]
+k_vectors, e_vectors = sw.make_6_wave_NI(C, THETA, a1=1, a2=1, a3=1)
 
 ########################################################################################################################
 # SIMULATION
@@ -96,7 +75,7 @@ e_sq = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugat
 h_sq = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
 helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-fig, ax = plt.subplots(3, 3, figsize=(8, 12))
+fig, ax = plt.subplots(2, 2, figsize=(12, 12))
 
 ax[0, 0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
 ax[0, 0].set_title(f'Helicity Density using beam LG{L}{P}')
@@ -104,7 +83,7 @@ ax[0, 0].set_title(f'Helicity Density using beam LG{L}{P}')
 ax[0, 1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
 ax[0, 1].set_title('Intensity')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
-ax[0, 2].set_title('H Squared')
+ax[1, 0].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
+ax[1, 0].set_title('H Squared')
 
 plt.show()
