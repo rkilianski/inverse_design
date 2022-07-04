@@ -1,8 +1,9 @@
-"""Script simulating helicity lattice in vacuum using 3 HG beams.  """
+"""Script simulating helicity lattice in vacuum using 4 LG beams.  """
 import meep as mp
 import numpy as np
 import module_lg_beam_any as mlg
 import set_waves_module as sw
+import plane_rotator as pr
 from matplotlib import pyplot as plt, animation
 
 DPML = 2  # thickness of PML layers
@@ -11,35 +12,42 @@ SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell siz
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 10
 
-L, P = 1, 1
-WAIST = 12
-WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
+RESOLUTION = 8
+SLICE_POSITION = 20
+SLICE_AXIS = 2
+
+L, P = 1, 1
+WAIST = 12
+WAVELENGTH = 1.4
+########################################################################################################################
+# K-VECTORS, E-VECTORS AND ROTATION
+########################################################################################################################
+C = 1
+a1, a2, a4 = 1, 1, 1
+THETA = np.pi / 3
+k_vectors, e_vectors = sw.make_4_wave_b_NI(C, THETA, a1, a2, a4)
+# rotated k vectors and e vectors
+k_on_plane, e_rotated = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
-K1, K2, K3 = rk.z_rotated_k_vectors
-k_vectors = [K1, K2, K3]
-E1, E2, E3 = K2, K3, K1
-e_vectors = [E1, E2, E3]
 
 all_waves = []
 helicity_anim = []
-wavelengths = np.arange(0.8, 2.2, 0.2)
-ITERATIONS = len(wavelengths)
-SLICE_POSITION = 20
-SLICE_AXIS = 2
+ITERATIONS = 4
+
 
 for i in range(ITERATIONS):
-    all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, wavelengths[i], [SX, SY, SZ], OBS_VOL, WAIST,
-                                           l=L,
-                                           p=P)
+    for j in range(ITERATIONS):
+        all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST,
+                                           l=i,
+                                           p=j)
 
     sim = mp.Simulation(
         cell_size=CELL,
@@ -91,9 +99,9 @@ fig_a.colorbar(intns)
 
 def animate(i):
     intns.set_array(np.transpose(helicity_anim[i][:, :]).flatten())
-    ax_a.set_title(f"Wavelength: {wavelengths[i]}")
+    ax_a.set_title(f"LG Beam: {i}{j} with wavelength {WAVELENGTH}")
 
 
-anim = animation.FuncAnimation(fig_a, animate, interval=200, frames=ITERATIONS)
+anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=ITERATIONS)
 anim.save(f'Intensity animation up to {ITERATIONS} frames.gif')
 plt.show()
