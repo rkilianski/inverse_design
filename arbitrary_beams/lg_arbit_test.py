@@ -27,7 +27,7 @@ OBS_VOL = mp.Vector3(OBS_X_A, OBS_Y_A, OBS_Z_A)
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 
 MATERIAL = mp.Medium(epsilon=1)
-L, P = 2, 0
+L, P = 4, 4
 WAVELENGTH = 1
 WAIST = 2
 
@@ -46,7 +46,7 @@ def get_fields(simulation, slice_axis, which_point):
 
 
 K_VEC = np.array([1, 0, 0])
-POL_VEC = np.array([0,0,1])
+POL_VEC = np.array([0, 0, 1])
 
 beams = mlg.make_lg_beam_any_dir(K_VEC, POL_VEC, FCEN, WAVELENGTH, [sx, sy, sz], OBS_VOL, waist=WAIST,
                                  l=L, p=P)
@@ -72,9 +72,6 @@ plots_2D.append(e_squared)
 
 # fig, ax = plt.subplots(1, 1, figsize=(12, 12))
 
-plt.pcolormesh(x, y, np.transpose(plots_2D[0]),cmap='Spectral', alpha=1)
-
-
-
+plt.pcolormesh(x, y, np.transpose(plots_2D[0]), cmap='Spectral', alpha=1)
 
 plt.show()

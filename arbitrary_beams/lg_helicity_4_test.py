@@ -3,6 +3,7 @@ import meep as mp
 import numpy as np
 import module_lg_beam_any as mlg
 import plane_rotator as pr
+import set_waves_module as sw
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
@@ -21,37 +22,14 @@ DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
 ########################################################################################################################
-# K-VECTORS
+# K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
 C = 1
+a1, a2, a4 = 1, 1, 1
 THETA = np.pi / 3
-
-K1 = C * np.array([np.cos(THETA), np.sin(THETA), 0])
-K2 = C * np.array([np.cos(THETA), -np.sin(THETA), 0])
-K3 = C * np.array([0, np.sin(THETA), np.cos(THETA)])
-K4 = C * np.array([0, -np.sin(THETA), np.cos(THETA)])
-
-k_vectors = [K1, K2, K3, K4]
-
-########################################################################################################################
-# POLARISATION VECTORS
-########################################################################################################################
-delta_phi = 0
-amp1 = 1
-a3 = 1
-amp2 = np.conjugate(amp1) * (a3 / np.conjugate(a3)) * np.exp(1j * delta_phi)
-amp3 = a3
-amp4 = a3 * np.exp(1j * delta_phi)
-
-E1 = C * amp1 * np.array([-np.cos(THETA), -np.sin(THETA), 1])
-E2 = C * amp2 * np.array([-np.cos(THETA), -np.sin(THETA), -1])
-E3 = C * amp3 * np.array([np.sin(THETA), -np.cos(THETA), 1])
-E4 = C * amp4 * np.array([-np.sin(THETA), np.cos(THETA), 1])
-
-e_vectors = [E1, E2, E3, E4]
-
+k_vectors, e_vectors = sw.make_4_wave_b_NI(C, THETA, a1, a2, a4)
 # rotated k vectors and e vectors
-k_on_plane, e_rotated = pr.find_angles_and_rotate(k_vectors, e_vectors, 2)
+k_on_plane, e_rotated = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 
 ########################################################################################################################
 # SIMULATION

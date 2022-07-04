@@ -1,14 +1,49 @@
-import meep as mp
 import numpy as np
-import sympy as sym
 
-Rx = sym.rot_axis1(sym.Symbol('x'))
-Ry = sym.rot_axis3(sym.Symbol('y'))
-Rz = sym.rot_axis3(sym.Symbol('z'))
 
-RM = Rx * Ry * Rz
+def make_4_wave_NI(C, theta, a1, a2, a4):
+    """ The angle theta can be anything between 0 and pi/2, except pi/4"""
+    K1 = C * np.array([np.cos(theta), np.sin(theta), 0])
+    K2 = C * np.array([np.cos(theta), -np.sin(theta), 0])
+    K3 = C * np.array([-np.cos(theta), np.sin(theta), 0])
+    K4 = C * np.array([-np.cos(theta), -np.sin(theta), 0])
 
-z_zero_vector = RM.row(2)
+    amp1 = a1
+    amp2 = a2
+    amp3 = -a1 * np.conjugate(a2) * np.sign(np.cos(2 * theta)) / (np.conjugate(a4) * np.sqrt(np.abs(np.cos(2 * theta))))
+    amp4 = a4 / (np.sqrt(np.abs(np.cos(2 * theta))))
+
+    E1 = amp1 * np.array([0, 0, 1])
+    E2 = amp2 * np.array([0, 0, 1])
+    E3 = amp3 * np.array([np.sin(theta), np.cos(theta), 0])
+    E4 = amp4 * np.array([-np.sin(theta), np.cos(theta), 0])
+
+    k_vec = [K1, K2, K3, K4]
+    e_vec = [E1, E2, E3, E4]
+
+    return k_vec, e_vec
+
+
+def make_4_wave_b_NI(C, theta, a1, a2, a4):
+    """ The lattice doesn't lie on the xy plane. Vectors can be rotated using plane rotator module"""
+    K1 = C * np.array([np.cos(theta), np.sin(theta), 0])
+    K2 = C * np.array([np.cos(theta), -np.sin(theta), 0])
+    K3 = C * np.array([0, np.sin(theta), np.cos(theta)])
+    K4 = C * np.array([0, -np.sin(theta), np.cos(theta)])
+
+    amp1 = a1
+    amp2 = a2
+    amp3 = -a1 * np.conjugate(a2) / np.conjugate(a4)
+    amp4 = a4
+    E1 = C * amp1 * np.array([0, 0, 1])
+    E2 = C * amp2 * np.array([0, 0, 1])
+    E3 = C * amp3 * np.array([1, 0, 0])
+    E4 = C * amp4 * np.array([1, 0, 0])
+
+    k_vec = [K1, K2, K3, K4]
+    e_vec = [E1, E2, E3, E4]
+
+    return k_vec, e_vec
 
 
 def make_6_wave_NI(C, theta, a1, a2, a3):

@@ -2,7 +2,7 @@
 import meep as mp
 import numpy as np
 import module_lg_beam_any as mlg
-import rotation_kvectors as rk
+import set_waves_module as sw
 from matplotlib import pyplot as plt, animation
 
 DPML = 2  # thickness of PML layers
