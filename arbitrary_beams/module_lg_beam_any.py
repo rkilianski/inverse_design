@@ -58,7 +58,7 @@ def place_lg_source(box, k_vec):
     lam = (boundary + largest) / largest
     for i in indices:
         source[i] = k_vec[i] * (lam - 1)
-    print("source", source)
+
     return source
 
 
@@ -76,7 +76,6 @@ def lg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, p, l):
         z_dir = xp[0] * mp_pos[0] + xp[1] * mp_pos[1] + xp[2] * mp_pos[2]
         x_profile = yp[0] * mp_pos[0] + yp[1] * mp_pos[1] + yp[2] * mp_pos[2]
         y_profile = zp[0] * mp_pos[0] + zp[1] * mp_pos[1] + zp[2] * mp_pos[2]
-
         r_squared = x_profile ** 2 + y_profile ** 2
         r = np.sqrt(r_squared)
 
@@ -87,7 +86,6 @@ def lg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, p, l):
 
         norm_constant = np.sqrt(2 * special.factorial(p) / (np.pi * (special.factorial(p + l_abs))))
         l_lp = _laguerre_fun(p, l_abs)
-
         psi = (l_abs + 2 * p + 1) * np.arctan(z_dir / z_R)
         phi = np.arctan2(x_profile, y_profile)
 
@@ -98,7 +96,6 @@ def lg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, p, l):
 
         lg_beam = pol_amp * lag_fun * exp_fun
 
-        print(lg_beam)
         return lg_beam
 
     return _lg_profile

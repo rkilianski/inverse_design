@@ -31,7 +31,7 @@ e_vectors = [E1, E2, E3]
 
 all_waves = []
 helicity_anim = []
-wavelengths = np.arange(0.8, 2, 0.1)
+wavelengths = np.arange(1.8, 2, 0.1)
 ITERATIONS = len(wavelengths)
 SLICE_POSITION = 20
 SLICE_AXIS = 2
@@ -102,6 +102,6 @@ def animate(i):
     ax_a.set_title(f"Wavelength:: {wavelengths[i]}")
 
 
-anim = animation.FuncAnimation(fig_a, animate, interval=100, frames=ITERATIONS)
+anim = animation.FuncAnimation(fig_a, animate, interval=200, frames=ITERATIONS)
 anim.save(f'Intensity animation up to {ITERATIONS} frames.gif')
 plt.show()

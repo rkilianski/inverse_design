@@ -70,7 +70,7 @@ e_squared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.con
 plots_2D.append(e_squared)
 
 
-plt.pcolormesh(x, y, np.transpose(plots_2D[0]), alpha=1)
+plt.pcolormesh(x, y, np.transpose(plots_2D[0]),cmap='Spectral', alpha=1)
 
 
 

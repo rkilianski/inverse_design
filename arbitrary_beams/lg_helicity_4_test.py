@@ -101,15 +101,15 @@ e_sq = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugat
 h_sq = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
 helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-fig, ax = plt.subplots(3, 3, figsize=(8, 12))
+fig, ax = plt.subplots(1, 3, figsize=(8, 12))
 
-ax[0, 0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
-ax[0, 0].set_title(f'Helicity Density using beam LG{L}{P}')
+ax[0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
+ax[0].set_title(f'Helicity Density using beam LG{L}{P}')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
-ax[0, 1].set_title('Intensity')
+ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
+ax[1].set_title('Intensity')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
-ax[0, 2].set_title('H Squared')
+ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
+ax[2].set_title('H Squared')
 
 plt.show()

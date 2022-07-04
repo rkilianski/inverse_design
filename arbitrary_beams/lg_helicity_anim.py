@@ -31,13 +31,14 @@ e_vectors = [E1, E2, E3]
 
 all_waves = []
 helicity_anim = []
-wavelengths = np.arange(1.8, 2, 0.1)
+wavelengths = np.arange(0.8, 2.2, 0.2)
 ITERATIONS = len(wavelengths)
 SLICE_POSITION = 20
 SLICE_AXIS = 2
 
 for i in range(ITERATIONS):
-    all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L,
+    all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, wavelengths[i], [SX, SY, SZ], OBS_VOL, WAIST,
+                                           l=L,
                                            p=P)
 
     sim = mp.Simulation(
@@ -91,7 +92,7 @@ fig_a.colorbar(intns)
 
 def animate(i):
     intns.set_array(np.transpose(helicity_anim[i][:, :]).flatten())
-    ax_a.set_title(f"Wavelength:: {wavelengths[i]}")
+    ax_a.set_title(f"Wavelength: {wavelengths[i]}")
 
 
 anim = animation.FuncAnimation(fig_a, animate, interval=200, frames=ITERATIONS)
