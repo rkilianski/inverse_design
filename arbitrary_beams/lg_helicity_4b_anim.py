@@ -41,6 +41,7 @@ T = 20  # run time
 all_waves = []
 helicity_anim = []
 ITERATIONS = 4
+frames_nr = ITERATIONS ** 2
 
 
 def make_pairs(iter):
@@ -91,10 +92,12 @@ for i in range(ITERATIONS):
 
         intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
 
-        helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
+        helicity_density = np.imag(
+            intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
         helicity_anim.append(helicity_density)
 
+        print(f"{len(helicity_anim)} of {ITERATIONS ** 2} complete")
 ########################################################################################################################
 # PLOTS AND METADATA
 ########################################################################################################################
@@ -112,6 +115,6 @@ def animate(i):
     ax_a.set_title(f"LG Beam: {beam_pairs[i]} with wavelength {WAVELENGTH}")
 
 
-anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=ITERATIONS)
-anim.save(f'Varied L and P up to {ITERATIONS ** 2} frames.gif')
+anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=frames_nr)
+anim.save(f'Varied L and P up to {frames_nr} frames.gif')
 plt.show()

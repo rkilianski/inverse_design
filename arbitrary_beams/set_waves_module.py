@@ -1,6 +1,30 @@
 import numpy as np
 
 
+def make_4_wave_SC(C, theta, a1, a3, delta_phi):
+    """ Superchiral lattice; interference terms cancelling"""
+
+    K1 = C * np.array([np.cos(theta), np.sin(theta), 1])
+    K2 = C * np.array([-np.cos(theta), -np.sin(theta), 1])
+    K3 = C * np.array([-np.cos(theta), np.sin(theta), 1])
+    K4 = C * np.array([np.cos(theta), -np.sin(theta), 1])
+
+    amp1 = a1
+    amp2 = np.conjugate(amp1) * (a3 / np.conjugate(a3)) * np.exp(1j * delta_phi)
+    amp3 = a3
+    amp4 = a3 * np.exp(1j * delta_phi)
+
+    E1 = C * amp1 * np.array([-np.cos(theta), -np.sin(theta), 1])
+    E2 = C * amp2 * np.array([-np.cos(theta), -np.sin(theta), -1])
+    E3 = C * amp3 * np.array([np.sin(theta), -np.cos(theta), 1])
+    E4 = C * amp4 * np.array([-np.sin(theta), np.cos(theta), 1])
+
+    k_vec = [K1, K2, K3, K4]
+    e_vec = [E1, E2, E3, E4]
+
+    return k_vec, e_vec
+
+
 def make_4_wave_NI(C, theta, a1, a2, a4):
     """ The angle theta can be anything between 0 and pi/2, except pi/4"""
     K1 = C * np.array([np.cos(theta), np.sin(theta), 0])

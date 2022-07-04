@@ -6,6 +6,7 @@ import set_waves_module as sw
 import plane_rotator as pr
 from matplotlib import pyplot as plt, animation
 
+STR_SETUP = "4_wave_xy"
 DPML = 2  # thickness of PML layers
 COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
@@ -39,7 +40,8 @@ T = 20  # run time
 
 all_waves = []
 helicity_anim = []
-ITERATIONS = 4
+ITERATIONS = 2
+frames_nr = ITERATIONS ** 2
 
 
 def make_pairs(iter):
@@ -90,9 +92,12 @@ for i in range(ITERATIONS):
 
         intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
 
-        helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
+        helicity_density = np.imag(
+            intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
         helicity_anim.append(helicity_density)
+
+        print(f"{len(helicity_anim)} of {ITERATIONS ** 2} complete")
 
 ########################################################################################################################
 # PLOTS AND METADATA
@@ -111,6 +116,6 @@ def animate(i):
     ax_a.set_title(f"LG Beam: {beam_pairs[i]} with wavelength {WAVELENGTH}")
 
 
-anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=ITERATIONS)
-anim.save(f'Varied L and P up to {ITERATIONS ** 2} frames.gif')
+anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=frames_nr)
+anim.save(f'Varied_LP{STR_SETUP} up to {frames_nr} frames.gif')
 plt.show()
