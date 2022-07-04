@@ -2,6 +2,7 @@ import meep as mp
 import numpy as np
 from scipy import special
 
+nr_of_src = 0
 
 def change_coords(k_vector):
     """ Helper function to the hg_amp function. Takes in a propagation direction k-vector, and rotates the axes to align
@@ -58,6 +59,8 @@ def place_lg_source(box, k_vec):
     lam = (boundary + largest) / largest
     for i in indices:
         source[i] = k_vec[i] * (lam - 1)
+
+    print("I have placed a source.")
 
     return source
 
