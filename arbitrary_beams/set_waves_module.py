@@ -1,6 +1,37 @@
 import numpy as np
 
 
+def make_3_wave_NI(C, theta1, theta2, theta3, a1, a2, a3):
+    """ 3 wave superposition; helicity k-vectors are not oriented on the xy plane;
+     can be rotated using plane rotator module.
+      theta inputs:
+      a)
+      all 3 zero
+      b)
+      superchiral structure:
+      theta1 = 0
+      theta2 = 7pi/4
+      theta3 = 3pi/2
+      a2 is the sqrt(2) of the amplitude of the other two."""
+
+    K1 = C * np.array([np.cos(theta1), 0, -np.sin(theta1)])
+    K2 = C * np.array([-np.sin(theta2), np.cos(theta2), 0])
+    K3 = C * np.array([0, -np.sin(theta3), np.cos(theta3)])
+
+    amp1 = a1
+    amp2 = a2
+    amp3 = a3
+
+    E1 = C * amp1 * np.array([0, 1, 0])
+    E2 = C * amp2 * np.array([0, 0, 1])
+    E3 = C * amp3 * np.array([1, 0, 0])
+
+    k_vec = [K1, K2, K3]
+    e_vec = [E1, E2, E3]
+
+    return k_vec, e_vec
+
+
 def make_4_wave_SC(C, theta, a1, a3, delta_phi):
     """ Superchiral lattice; interference terms cancelling"""
 
