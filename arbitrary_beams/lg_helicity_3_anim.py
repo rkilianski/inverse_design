@@ -1,7 +1,7 @@
 """Script simulating helicity lattice in vacuum using 3 HG beams.  """
 import meep as mp
 import numpy as np
-import module_hg_beam as mhg
+import module_lg_beam_any as mlg
 import plane_rotator as pr
 import set_waves_module as sw
 from matplotlib import pyplot as plt, animation
@@ -18,7 +18,7 @@ WAIST = 12
 WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
-M, N = 0, 0
+L, P = 0, 0
 
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
@@ -45,15 +45,14 @@ SLICE_AXIS = 2
 
 for i in range(ITERATIONS):
 
-    all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=M,
-                                           n=N)
+    all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
 
     sim = mp.Simulation(
         cell_size=CELL,
         sources=all_waves,
         boundary_layers=PML_LAYERS,
         resolution=RESOLUTION,
-        default_material=mp.Medium(index=N),
+        default_material=mp.Medium(index=1),
         force_complex_fields=True
     )
 
@@ -93,7 +92,6 @@ plt.rcParams["figure.autolayout"] = True
 fig_a, ax_a = plt.subplots()
 
 intns = ax_a.pcolormesh(x, y, np.transpose(helicity_anim[0]), vmax=1, vmin=-1, cmap='RdYlBu')
-# ax_a.plot(x[x_obs_index], y[y_obs_index], 'ro')
 fig_a.colorbar(intns)
 
 
