@@ -2,8 +2,7 @@ import numpy as np
 
 
 def make_3_wave_NI(C, theta1, theta2, theta3, a1, a2, a3):
-    """ 3 wave superposition; helicity k-vectors are not oriented on the xy plane;
-     can be rotated using plane rotator module.
+    """ a) are not oriented on the x-y plane, they can be rotated using plane rotator module .
       theta inputs:
       a)
       all 3 zero

@@ -14,7 +14,7 @@ OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 12
 
-FCEN = 3/ np.pi  # pulse center frequency
+FCEN = 1.8/ np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
@@ -34,7 +34,7 @@ k_vectors, e_vectors = sw.make_4_wave_NI(C, THETA, a1, a2, a4)
 T = 20  # run time
 
 all_waves = m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], OBS_VOL, N)
-m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], OBS_VOL, N)
+
 sim = mp.Simulation(
     cell_size=CELL,
     sources=all_waves,
