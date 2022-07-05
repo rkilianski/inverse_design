@@ -1,38 +1,42 @@
-"""Script simulating helicity lattice in vacuum using 3 HG beams.  """
+"""Script simulating helicity lattice in vacuum using 4 plane waves.  """
 import meep as mp
 import numpy as np
 import module_hg_beam as mhg
-import rotation_kvectors as rk
+import plane_rotator as pr
+import set_waves_module as sw
 import matplotlib.pyplot as plt
 
-DPML = 2  # thickness of PML layers
+DPML = 3  # thickness of PML layers
 COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
-VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
-WAIST = 12
-WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
-N = 1  # refractive index of material containing the source
+
+WAIST = 2
+WAVELENGTH = 1
+M, N = 0, 0
+########################################################################################################################
+# K-VECTORS, E-VECTORS AND ROTATION
+########################################################################################################################
+C = 1
+a1, a2, a3 = 1, 1, 1
+T1, T2, T3 = 0, 0, 0
+k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
+print(k_vectors)
+# rotating k vectors and e vectors
+k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
-K1, K2, K3 = rk.z_rotated_k_vectors
-# k_vectors = [K1, K2, K3]
-k_vectors = [np.array([1,0,0])]
-E1, E2, E3 = K2, K3, K1
-# e_vectors = [E1, E2, E3]
-e_vectors = [np.array([0,0,1])]
-print( k_vectors)
 
-all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=0, n=0)
+all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=M, n=N)
 
 sim = mp.Simulation(
     cell_size=CELL,
@@ -69,47 +73,21 @@ Ex, Ey, Ez, Hx, Hy, Hz, eps_data = [[a[chosen_slice, :, :], a[:, chosen_slice, :
                                     for a
                                     in [Ex, Ey, Ez, Hx, Hy, Hz, eps_data]]
 
-eps_data = np.ma.masked_array(eps_data, eps_data < np.sqrt(1.4))
-
 intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
 
-ESquared = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
-HSquared = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
-
-S0 = np.real(intensityNorm * (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey)))
-S1 = np.real(intensityNorm * (Ex * np.conjugate(Ex) - Ey * np.conjugate(Ey)))
-S2 = np.real(intensityNorm * (Ex * np.conjugate(Ey) + Ey * np.conjugate(Ex)))
-S3 = np.real(intensityNorm * 1j * (Ex * np.conjugate(Ey) - Ey * np.conjugate(Ex)))
-
+e_sq = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez)))
+h_sq = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
 helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-fig, ax = plt.subplots(3, 3, figsize=(12, 10))
+fig, ax = plt.subplots(1, 3, figsize=(8, 12))
 
-ax[0, 0].pcolormesh(x, y, np.transpose(np.real(Ex)))
-ax[0, 0].set_title('Ex')
-ax[0, 0].pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
+ax[0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
+ax[0].set_title(f'Helicity Density 4 plane waves')
 
-ax[0, 1].pcolormesh(x, y, np.transpose(np.real(Ey)))
-ax[0, 1].set_title('Ey')
-ax[0, 1].pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
+ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
+ax[1].set_title('Intensity')
 
-ax[0, 2].pcolormesh(x, y, np.transpose(np.real(Ez)))
-ax[0, 2].set_title('Ez')
-ax[0, 2].pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
-
-i = 0
-
-for ax, Si, name in zip([ax[1, 0], ax[1, 1], ax[1, 2], ax[2, 0], ax[2, 1], ax[2, 2]],
-                        [ESquared, HSquared, helicity_density, S1, S2, S3],
-                        ['E field Intensity', 'H field Intensity', "Helicity density", 'S1', 'S2', 'S3']):
-    S_ax = ax.pcolormesh(x, y, np.transpose(Si), vmax=1, vmin=-1, cmap='RdYlBu')
-    ax.pcolormesh(x, y, np.transpose(eps_data), cmap='Greys', alpha=1, vmin=0, vmax=4)
-    ax.set_title(name)
-    cbar_ax = fig.add_axes([0.85, 0.1, 0.02, 0.5])
-    fig.colorbar(S_ax, cax=cbar_ax)
-fig.subplots_adjust(right=0.8)
+ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
+ax[2].set_title('H Squared')
 
 plt.show()
-#
-# plt.pcolormesh(helicityDensity, vmin=-1, vmax=1, cmap='RdYlBu')
-# plt.show()
