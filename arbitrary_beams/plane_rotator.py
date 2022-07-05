@@ -58,7 +58,7 @@ def check_for_zero(v):
 
 def _get_angles(k_arr, prp_to, solution_nr):
     """Provide an array of numerical k_vectors, i.e. if they contain sin and cos, evaluate at e.g. pi/4."""
-    x, y, z = symbols(' x y z ', real=True)
+    x, y, z = symbols(' x y z ')
     angles = [x, y, z]
     angles.pop(prp_to)
     row_of_rot = create_rot_matrix_row(prp_to)

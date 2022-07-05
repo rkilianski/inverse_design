@@ -14,7 +14,7 @@ OBS_VOL = mp.Vector3(8, 8, 8)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 10
 
-FCEN = 3/ np.pi  # pulse center frequency
+FCEN = 3 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
@@ -23,7 +23,7 @@ N = 1  # refractive index of material containing the source
 ########################################################################################################################
 C = 1
 a1, a2, a3 = 1, 1, 1
-T1, T2, T3 = 0,0,0
+T1, T2, T3 = 0, 0, 0
 k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
 print(k_vectors)
 # rotating k vectors and e vectors
