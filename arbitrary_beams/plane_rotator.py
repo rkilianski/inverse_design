@@ -57,8 +57,8 @@ def _get_angles(k_arr, prp_to):
     vector_pairs = permute_k(k_arr)
     system = create_system(vector_pairs, row_of_rot)
     solution = solve(system, angles)
-    angle1 = solution[0][0]
-    angle2 = solution[0][1]
+    angle1 = solution[1][0]
+    angle2 = solution[1][1]
     print(f'The angles are: phi: {angle1} and theta: {angle2} ')
     x1 = float(angle1.evalf())
     x2 = float(angle2.evalf())
@@ -94,10 +94,12 @@ def find_angles_and_rotate(k_arr, e_arr, prp_to):
     for element, pol_amp in zip(k_arr, e_arr):
         print(element)
         new_k.append(np.dot(RM, element))
-        print(np.dot(RM, element))
+        print("new vector:",np.dot(RM, element))
         new_e.append(np.dot(RM, pol_amp))
 
-    print(new_k)
+    print("length:",len(new_k))
+    print("new vectors are:",new_k)
+
     return new_k, new_e
 
 

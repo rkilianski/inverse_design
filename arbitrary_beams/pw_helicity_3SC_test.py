@@ -7,12 +7,12 @@ import set_waves_module as sw
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [16, 16, 16]  # dimensions of the computational cell, not including PML
+COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
-OBS_VOL = mp.Vector3(12, 12, 12)
+OBS_VOL = mp.Vector3(8, 8, 8)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 8
+RESOLUTION = 10
 
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
@@ -34,7 +34,7 @@ k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 T = 20  # run time
 
 all_waves = m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], OBS_VOL, N)
-m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], OBS_VOL, N)
+
 sim = mp.Simulation(
     cell_size=CELL,
     sources=all_waves,
