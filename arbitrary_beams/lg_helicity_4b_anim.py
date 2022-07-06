@@ -17,19 +17,20 @@ FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
-RESOLUTION = 6
+RESOLUTION = 8
 SLICE_POSITION = 20
 SLICE_AXIS = 2
 
-L, P = 1, 1
+L, P = 0, 0
 WAIST = 12
-WAVELENGTH = 1.4
+wavelengths = np.arange(0.8, 1.2, 0.1)
+ITERATIONS = len(wavelengths)
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
 C = 1
 a1, a2, a4 = 1, 1, 1
-THETA = np.pi / 3
+THETA = np.pi / 6
 k_vectors, e_vectors = sw.make_4_wave_b_NI(C, THETA, a1, a2, a4)
 # rotated k vectors and e vectors
 k_on_plane, e_rotated = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
@@ -40,64 +41,63 @@ T = 20  # run time
 
 all_waves = []
 helicity_anim = []
-ITERATIONS = 4
+
 frames_nr = ITERATIONS ** 2
 
 
-def make_pairs(iter):
-    pairs = []
-    for i in range(iter):
-        for j in range(iter):
-            pairs.append((i, j))
-    return pairs
+# def make_pairs(iter):
+#     pairs = []
+#     for i in range(iter):
+#         for j in range(iter):
+#             pairs.append((i, j))
+#     return pairs
 
-
-beam_pairs = make_pairs(ITERATIONS)
+#
+# beam_pairs = make_pairs(ITERATIONS)
 
 for i in range(ITERATIONS):
-    for j in range(ITERATIONS):
-        all_waves = mlg.make_multiple_lg_beams(k_on_plane, e_rotated, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST,
-                                               l=i,
-                                               p=j)
+    all_waves = mlg.make_multiple_lg_beams(k_on_plane, e_rotated, FCEN, wavelengths[i], [SX, SY, SZ], OBS_VOL, WAIST,
+                                           l=L,
+                                           p=P)
 
-        sim = mp.Simulation(
-            cell_size=CELL,
-            sources=all_waves,
-            boundary_layers=PML_LAYERS,
-            resolution=RESOLUTION,
-            default_material=mp.Medium(index=N),
-            force_complex_fields=True
-        )
+    sim = mp.Simulation(
+        cell_size=CELL,
+        sources=all_waves,
+        boundary_layers=PML_LAYERS,
+        resolution=RESOLUTION,
+        default_material=mp.Medium(index=N),
+        force_complex_fields=True
+    )
 
-        sim.run(until=T)
+    sim.run(until=T)
 
-        components = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz]
+    components = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz]
 
-        Ex, Ey, Ez, Hx, Hy, Hz = [sim.get_array(center=mp.Vector3(), size=OBS_VOL, component=i) for i in
-                                  components]
-        x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=OBS_VOL)
+    Ex, Ey, Ez, Hx, Hy, Hz = [sim.get_array(center=mp.Vector3(), size=OBS_VOL, component=i) for i in
+                              components]
+    x, y, z, w = sim.get_array_metadata(center=mp.Vector3(), size=OBS_VOL)
 
-        x = x[1:-1]
-        y = y[1:-1]
-        z = z[1:-1]
+    x = x[1:-1]
+    y = y[1:-1]
+    z = z[1:-1]
 
-        chosen_slice = np.argmin((np.array([x, y, z][SLICE_AXIS]) - SLICE_POSITION) ** 2)
+    chosen_slice = np.argmin((np.array([x, y, z][SLICE_AXIS]) - SLICE_POSITION) ** 2)
 
-        Ex, Ey, Ez, Hx, Hy, Hz = [a[1:-1, 1:-1, 1:-1] for a in [Ex, Ey, Ez, Hx, Hy, Hz]]
+    Ex, Ey, Ez, Hx, Hy, Hz = [a[1:-1, 1:-1, 1:-1] for a in [Ex, Ey, Ez, Hx, Hy, Hz]]
 
-        Ex, Ey, Ez, Hx, Hy, Hz = [
-            [a[chosen_slice, :, :], a[:, chosen_slice, :], a[:, :, chosen_slice]][SLICE_AXIS]
-            for a
-            in [Ex, Ey, Ez, Hx, Hy, Hz]]
+    Ex, Ey, Ez, Hx, Hy, Hz = [
+        [a[chosen_slice, :, :], a[:, chosen_slice, :], a[:, :, chosen_slice]][SLICE_AXIS]
+        for a
+        in [Ex, Ey, Ez, Hx, Hy, Hz]]
 
-        intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
+    intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
 
-        helicity_density = np.imag(
-            intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
+    helicity_density = np.imag(
+        intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-        helicity_anim.append(helicity_density)
+    helicity_anim.append(helicity_density)
 
-        print(f"{len(helicity_anim)} of {ITERATIONS ** 2} complete")
+    print(f"{len(helicity_anim)} of {ITERATIONS} complete")
 ########################################################################################################################
 # PLOTS AND METADATA
 ########################################################################################################################
@@ -112,9 +112,9 @@ fig_a.colorbar(intns)
 
 def animate(i):
     intns.set_array(np.transpose(helicity_anim[i][:, :]).flatten())
-    ax_a.set_title(f"LG Beam: {beam_pairs[i]} with wavelength {WAVELENGTH}")
+    ax_a.set_title(f"LG Beam: {L}{P} with wavelength {wavelengths[i]}")
 
 
-anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=frames_nr)
-anim.save(f'Varied L and P up to {frames_nr} frames.gif')
+anim = animation.FuncAnimation(fig_a, animate, interval=300, frames=ITERATIONS)
+anim.save(f'Varied wavelengths LG {L}{P} up to {ITERATIONS} frames.gif')
 plt.show()

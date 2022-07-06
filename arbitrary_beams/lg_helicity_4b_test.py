@@ -1,7 +1,7 @@
-"""Script simulating helicity lattice in vacuum using 4 plane waves.  """
+"""Script simulating helicity lattice in vacuum using 3 HG beams.  """
 import meep as mp
 import numpy as np
-import module_hg_beam as mhg
+import module_lg_beam_any as mlg
 import plane_rotator as pr
 import set_waves_module as sw
 import matplotlib.pyplot as plt
@@ -14,29 +14,35 @@ OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
+L, P = 0, 0
+WAIST = 8
+WAVELENGTH = 1.4
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
+N = 1  # refractive index of material containing the source
 
-WAIST = 10
-WAVELENGTH = 1.5
-M, N = 0, 0
+########################################################################################################################
+# K-VECTORS, E-VECTORS AND ROTATION
+########################################################################################################################
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
 C = 1
 a1, a2, a3 = 1, 1, 1
-T1, T2, T3 = 0, 0, 0
-k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
-print(k_vectors)
-# rotating k vectors and e vectors
-k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
+THETA = np.pi / 6
+rot1 = 0
+rot2 = np.pi / 4
+k_vectors, e_vectors = sw.make_4_wave_b_NI(C, THETA, a1, a2, a3)
+# rotated k vectors and e vectors
+k_vectors, e_vectors = pr.rotate_by_angle(k_vectors, e_vectors, rot1, rot2, 2)
+
 
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
-T = 10  # run time
+T = 20  # run time
 
-all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=M, n=N)
+all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
 
 sim = mp.Simulation(
     cell_size=CELL,
@@ -53,7 +59,7 @@ sim.run(until=T)
 # PLOTS AND METADATA
 ########################################################################################################################
 
-SLICE_POSITION = 5
+SLICE_POSITION = 20
 SLICE_AXIS = 2
 
 components = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz, mp.Dielectric]
@@ -82,7 +88,7 @@ helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conj
 fig, ax = plt.subplots(1, 3, figsize=(8, 12))
 
 ax[0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
-ax[0].set_title(f'Helicity Density 4 plane waves')
+ax[0].set_title(f'Helicity Density using beam LG{L}{P}')
 
 ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
 ax[1].set_title('Intensity')

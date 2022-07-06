@@ -12,7 +12,7 @@ SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell siz
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 10
+RESOLUTION = 12
 
 WAIST = 12
 WAVELENGTH = 1.4
@@ -45,7 +45,7 @@ SLICE_AXIS = 2
 
 for i in range(ITERATIONS):
 
-    all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
+    all_waves = mlg.make_multiple_lg_beams(k_vectors, e_vectors, FCEN, wavelengths[i], [SX, SY, SZ], OBS_VOL, WAIST, l=L, p=P)
 
     sim = mp.Simulation(
         cell_size=CELL,
