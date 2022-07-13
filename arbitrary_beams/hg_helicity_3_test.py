@@ -1,6 +1,8 @@
 """Script simulating helicity lattice in vacuum using 4 plane waves.  """
 import meep as mp
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 import module_hg_beam as mhg
 import plane_rotator as pr
 import set_waves_module as sw
@@ -14,27 +16,28 @@ OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
-FCEN = 2 / np.pi  # pulse center frequency
+FCEN = 2/ np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 
-WAIST = 10
-WAVELENGTH = 1.5
-M, N = 0, 0
+WAIST = 12
+WAVELENGTH = 1
+M, N = 0,0
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
 C = 1
-a1, a2, a3 = 1, 1, 1
+a1, a2, a3 = 5, 5, 5
 T1, T2, T3 = 0, 0, 0
 k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
 print(k_vectors)
 # rotating k vectors and e vectors
 k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
+# k_vectors, e_vectors = pr.rotate_on_axis(k_vectors, e_vectors, np.pi / 4, 2)
 
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
-T = 10  # run time
+T = 20  # run time
 
 all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=M, n=N)
 
@@ -53,7 +56,7 @@ sim.run(until=T)
 # PLOTS AND METADATA
 ########################################################################################################################
 
-SLICE_POSITION = 5
+SLICE_POSITION = 20
 SLICE_AXIS = 2
 
 components = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz, mp.Dielectric]
@@ -79,15 +82,20 @@ e_sq = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugat
 h_sq = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
 helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-fig, ax = plt.subplots(1, 3, figsize=(8, 12))
+fig, ax = plt.subplots(figsize=(12, 12))
 
-ax[0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
-ax[0].set_title(f'Helicity Density 4 plane waves')
+im = ax.pcolormesh(x, y, np.transpose(helicity_density), cmap='RdBu', alpha=1, vmin=-1, vmax=1)
 
-ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
-ax[1].set_title('Intensity')
+divider = make_axes_locatable(ax)
+cax = divider.append_axes("right", size="5%", pad=0.05)
 
-ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
-ax[2].set_title('H Squared')
+plt.colorbar(im, cax=cax)
+# ax.set_title(f'Helicity Density 4 plane waves')
+
+# ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
+# ax[1].set_title('Intensity')
+#
+# ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
+# ax[2].set_title('H Squared')
 
 plt.show()

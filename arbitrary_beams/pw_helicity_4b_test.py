@@ -7,12 +7,13 @@ import set_waves_module as sw
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
+COMP_X, COMP_Y, COMP_Z = [8,8,8]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 12
+
 
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
@@ -78,15 +79,13 @@ e_sq = np.real((Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugat
 h_sq = np.real((Hx * np.conjugate(Hx) + Hy * np.conjugate(Hy) + Hz * np.conjugate(Hz)))
 helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conjugate(Hy) + Ez * np.conjugate(Hz)))
 
-fig, ax = plt.subplots(1, 3, figsize=(8, 12))
+cmaps = ['PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
+         'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']
+fig, ax = plt.subplots(3, 4, figsize=(8, 12))
 
-ax[0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdYlBu', alpha=1, vmin=-1, vmax=1)
-ax[0].set_title(f'Helicity Density 4 plane waves')
-
-ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
-ax[1].set_title('Intensity')
-
-ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
-ax[2].set_title('H Squared')
+for i in range(3):
+    for j in range(4):
+        ax[i, j].pcolormesh(x, y, np.transpose(helicity_density), cmap=cmaps[i*4 + j], alpha=1, vmin=-1, vmax=1)
+        ax[i, j].set_title(f'Cmap {cmaps[i*4 + j]}')
 
 plt.show()

@@ -21,7 +21,7 @@ def k_vector(arr, f, n):
     return k
 
 
-def make_3d_wave(k_list, p_list, frequency, width_f, src_vol, comp_cell, n, ray=False):
+def make_3d_wave(k_list, p_list, frequency, width_f, src_vol, comp_cell, n):
     """Takes a list of k-vectors, along with a list of corresponding polarisation vectors.
     Each component of the k-vector is modified by the pw_amp function and is given an amplitude corresponding to its
     polarisation component.
@@ -32,14 +32,9 @@ def make_3d_wave(k_list, p_list, frequency, width_f, src_vol, comp_cell, n, ray=
     wave in kz - polarised in y.
         Returns a list of sources."""
 
-    # If ray is true, the plane wave's source is smaller, allowing to produce a ray
-    if ray:
-        c = 0.25
-    else:
-        c = 1
     waves = []
     src_vol = np.array(src_vol)
-    sx, sy, sz = c*src_vol
+    sx, sy, sz = src_vol
     cx, cy, cz = comp_cell
     p_coefficient = 1  # this is either 0.5 or 1, depending on if we have 1 or 2 waves in the xy plane
 
@@ -69,7 +64,7 @@ def make_3d_wave(k_list, p_list, frequency, width_f, src_vol, comp_cell, n, ray=
                 else:
                     position = cy / 2
                 waves.append(mp.Source(
-                    mp.ContinuousSource(frequency, fwidth=width_f,  is_integrated=True),
+                    mp.ContinuousSource(frequency, fwidth=width_f, is_integrated=True),
                     component=mp.Ez,
                     size=mp.Vector3(sx, 0, sz),
                     center=mp.Vector3(0, position, 0),

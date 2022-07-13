@@ -16,23 +16,27 @@ VX, VY, VZ = OBS_VOL
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 6
 
-L, P = 1, 1
-WAIST = 8
-WAVELENGTH = 1.4
-FCEN = 2 / np.pi  # pulse center frequency
+L, P = 0,0
+WAIST = 20
+WAVELENGTH = 1
+FCEN = 2/ np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 N = 1  # refractive index of material containing the source
 
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
+########################################################################################################################
+# K-VECTORS, E-VECTORS AND ROTATION
+########################################################################################################################
 C = 1
-a1, a2, a3 = 1, 1, 1
-T1, T2, T3 = 0, 0, 0
+a1, a2, a3 = 5, 5 * np.sqrt(2), 5
+T1, T2, T3 = 0, 7 * np.pi / 4, 3 * np.pi / 2
 k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
 print(k_vectors)
 # rotating k vectors and e vectors
-k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
+# k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
+k_vectors, e_vectors = pr.rotate_on_axis(k_vectors, e_vectors, np.pi / 4, 2)
 
 ########################################################################################################################
 # SIMULATION
