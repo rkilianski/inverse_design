@@ -134,7 +134,7 @@ def exclude_points(arr_axes, arr_src, obs_centre_arr, points_list):
                 src_dist = _delta(x_i, x, x_src_i) + _delta(y_i, y, y_src_i) + _delta(z_i, z, z_src_i)
                 obs_dist = _delta(x_i, x, x_obs_i) + _delta(y_i, y, y_obs_i) + _delta(z_i, z, z_obs_i)
 
-                if src_dist < 0.1 or obs_dist < 1:
+                if src_dist < 0.1 or obs_dist < 0.1:
                     x_index = np.where(x == x_i)[0][0]
                     y_index = np.where(y == y_i)[0][0]
                     z_index = np.where(z == z_i)[0][0]
