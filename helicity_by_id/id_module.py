@@ -38,11 +38,11 @@ def reduce_volume(fun, endpoint, startpoint):
     return fun
 
 
-def install_function(axes, fun, reduced_vol=False):
+def install_function(axes, fun, z_index, reduced_vol=False):
     """Returns user defined function on a grid chosen by meep."""
     x, y, z = axes
     xx, yy, zz = np.meshgrid(x, y, z)
-    fun = fun(xx, yy)
+    fun = fun(xx, yy)[:, :, z_index]
     print(fun.shape)
     print(fun)
     if reduced_vol:
@@ -155,7 +155,7 @@ def df_match(old_field_arr, adj_field_arr, match_fun):
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr
 
-    d_func = np.matmul(match_fun, np.real((a1 * e1 + a2 * e2 + a3 * e3)))
+    d_func = np.tensordot(match_fun, np.real((a1 * e1 + a2 * e2 + a3 * e3)),axes=1)
     print("pattern shape", match_fun.shape)
     print("intensity shape ", np.real((a1 * e1 + a2 * e2 + a3 * e3)).shape)
     print("delta shape", d_func.shape)
