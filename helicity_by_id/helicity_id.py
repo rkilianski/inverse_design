@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 100
+ITERATIONS = 10
 T = 20
 
 # Plane wave
@@ -240,8 +240,9 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
     adjoint_2D = inv.get_fields(sim_adjoint, obs_vol_, True, slice_axis, z_obs_index)
     forward_2D_beam = inv.get_fields(sim, obs_vol_, True, beam_face_ax, fy0i)  # face of the beam for 2D plot
     df_2D = delta_f[:, :, z_obs_index]
+    pattern_2D = pattern[:, :, z_obs_index]
 
-    return axes, pattern, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_obs_ind, plot_feats
+    return axes, pattern_2D, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_obs_ind, plot_feats
 
 
 # ***************************************** CREATING A BEAM/WAVE *******************************************************

@@ -14,7 +14,7 @@ SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell siz
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 14
+RESOLUTION = 12
 
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
@@ -136,15 +136,17 @@ helicity_density3 = np.imag(
     intensityNorm3 * (Ex3 * np.conjugate(Hx3) + Ey3 * np.conjugate(Hy3) + Ez3 * np.conjugate(Hz3)))
 
 ########################################################################################################################
+
+plt.style.use('seaborn-poster')
 fig, ax = plt.subplots(1, 3, figsize=(12, 12))
 
 ax[0].pcolormesh(x, y, np.transpose(helicity_density), cmap='RdBu', alpha=1, vmin=-1, vmax=1)
-ax[0].set_title(f'Helicity Density 3 plane waves')
+ax[0].set_title(f'3 plane waves', fontsize=30)
 
 ax[1].pcolormesh(x, y, helicity_density2, cmap='RdBu', alpha=1, vmin=-1, vmax=1)
-ax[1].set_title('Helicity Density 3 HG beams')
+ax[1].set_title(' 3 HG beams', fontsize=30)
 
 ax[2].pcolormesh(x, y, helicity_density3, cmap='RdBu', alpha=1, vmin=-1, vmax=1)
-ax[2].set_title('Helicity Density 3 LG beams')
+ax[2].set_title('3 LG beams', fontsize=30)
 
 plt.show()
