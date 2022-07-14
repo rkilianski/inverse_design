@@ -72,6 +72,7 @@ def df(old_field_arr, adj_field_arr):
     return d_func
 
 
+
 def df_point(old_field_arr, adj_field_arr, value):
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr

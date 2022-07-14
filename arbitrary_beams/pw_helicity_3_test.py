@@ -85,7 +85,7 @@ ax[0].set_title(f'Helicity Density 4 plane waves')
 ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
 ax[1].set_title('Intensity')
 
-ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
+ax[2].pcolormesh(x, y, np.transpose(h_sq), cmap='RdPu', alpha=1)
 ax[2].set_title('H Squared')
 
 plt.show()

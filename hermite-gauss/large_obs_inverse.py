@@ -5,6 +5,11 @@ import numpy as np
 # **********************************************************************************************************************
 # UTILITY FUNCTIONS
 # **********************************************************************************************************************
+
+def frob_prod(M):
+    return np.trace(np.transpose(M) * M)
+
+
 def get_intensity(arr):
     """Returns normalised intensity I for all x and y. """
     ex, ey, ez = arr[: 3]
@@ -176,7 +181,7 @@ def produce_adjoint_area(field, freq, dt, arr_coord, obs_point, reduced_area=Fal
     ll = len(x_ax)
     if reduced_area:
         l0 = int(len(x_ax) / 4)
-        ll = 3*l0
+        ll = 3 * l0
         x_ax = x_ax[l0:ll]
         y_ax = y_ax[l0:ll]
     for i in range(l0, ll):

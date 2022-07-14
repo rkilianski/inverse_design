@@ -4,14 +4,15 @@ import numpy as np
 import module_lg_beam_any as mlg
 import set_waves_module as sw
 import matplotlib.pyplot as plt
+import plane_rotator as pr
 
 DPML = 2  # thickness of PML layers
 COMP_X, COMP_Y, COMP_Z = [10, 10, 10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
-OBS_VOL = mp.Vector3(8,8,8)
+OBS_VOL = mp.Vector3(8, 8, 8)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 10
+RESOLUTION = 6
 
 L, P = 0, 0
 WAIST = 4
@@ -23,10 +24,12 @@ N = 1  # refractive index of material containing the source
 ########################################################################################################################
 # SET UP WAVES
 ########################################################################################################################
-THETA = 2 * np.pi / 3 - 0.005
 C = 1
-k_vectors, e_vectors = sw.make_6_wave_NI(C, THETA, a1=1, a2=1, a3=1)
-
+a1, a2, a3 = 1, 1, 1
+THETA = np.pi / 3
+k_vectors, e_vectors = sw.make_6_wave_NI(C,THETA, a1, a2, a3)
+# rotated k vectors and e vectors
+# k_on_plane, e_rotated = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################

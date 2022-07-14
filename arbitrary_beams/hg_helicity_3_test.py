@@ -2,7 +2,6 @@
 import meep as mp
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
 import module_hg_beam as mhg
 import plane_rotator as pr
 import set_waves_module as sw
