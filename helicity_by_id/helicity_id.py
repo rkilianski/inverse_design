@@ -98,17 +98,17 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
     x1, x2, x3, _ = sim.get_array_metadata(center=mp.Vector3(), size=obs_vol_)
     [x, y, z] = [coordinate[1:-1] for coordinate in [x1, x2, x3]]
 
-    # trial function
-    if f_test is not None:
-        pattern = inv.install_function([x, y, z], f_test)
-        print(pattern.shape)
-    else:
-        pattern = e_sq_fixed
-
     x_src_index, y_src_index, z_src_index = [inv.find_nearest(i, j) for i, j in
                                              zip([x, y, z], [src_pos_x, src_pos_y, src_pos_z])]
 
     z_obs_index = inv.find_nearest(z, CHOSEN_POINT)
+
+    # trial function
+    if f_test is not None:
+        pattern = inv.install_function([x, y, z], f_test, z_obs_index)
+        print(pattern.shape)
+    else:
+        pattern = e_sq_fixed
 
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
@@ -240,7 +240,7 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
     adjoint_2D = inv.get_fields(sim_adjoint, obs_vol_, True, slice_axis, z_obs_index)
     forward_2D_beam = inv.get_fields(sim, obs_vol_, True, beam_face_ax, fy0i)  # face of the beam for 2D plot
     df_2D = delta_f[:, :, z_obs_index]
-    pattern_2D = pattern[:, :, z_obs_index]
+    pattern_2D = pattern
 
     return axes, pattern_2D, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_obs_ind, plot_feats
 
