@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 2
+ITERATIONS = 300
 T = 20
 
 # Plane wave
@@ -41,7 +41,7 @@ BEAM_FACE_AXIS = 2  # same face as the optimisation area
 AXES = [SLICE_AXIS, BEAM_FACE_AXIS]
 
 # Vertices of the area to be optimised ,[x0,xn,y0,yn,z0] s.t. area of (xn-x0)*(yn-y0) at level z0
-FLUX_AREA = [-3, -2, -1, 1, 0]
+FLUX_AREA = [-2, 2, -2, 2, 0]
 
 material = mp.Medium(epsilon=1)
 geom_list = []
@@ -338,40 +338,39 @@ ax.set_title('Intensity at the optimised wall.')
 plt.show()
 
 # ******************************************** 3D PLOTS ****************************************************************
-#
-# axes = [x, y, z]
-# with open(f"structure_at_{ITERATIONS}", "wb") as fp:  # Pickling
-#     pickle.dump(points_for_3D_plot, fp)
-# with open(f"axes_at_{ITERATIONS}", "wb") as sp:  # Pickling
-#     pickle.dump(axes, sp)
-#
-# # with open("test", "rb") as fp:  # Unpickling
-# #     b = pickle.load(fp)
-#
-# RADIUS = 0.05
-# larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
-# detailed_3D = inv.cubify(inv.spherify(points_for_3D_plot, [x, y, z], RADIUS), [x, y, z])
-# grid_1 = inv.cubify(source, [x, y, z])
-# grid_2 = inv.cubify(area, [x, y, z])
-# grid_3 = inv.cubify(larger_blocks, [x, y, z])
-#
-# voxel_array = grid_1 | grid_2 | grid_3
-# colors = np.empty(voxel_array.shape, dtype=object)
-# colors[grid_1] = 'y'
-# colors[grid_2] = 'r'
-# colors[grid_3] = 'b'
-# fig2 = plt.figure()
-# ax2 = fig2.add_subplot(projection='3d')
-# ax2.set_title(
-#     f'The 3D structure optimizing intensity, between x:({FLUX_AREA[0]},{FLUX_AREA[1]}), '
-#     f'z:({FLUX_AREA[3]},{FLUX_AREA[4]} )'
-#     f'at y:{FLUX_AREA[2]}.')
-# ax2.set_xlabel('X')
-# ax2.set_ylabel('Y')
-# ax2.set_zlabel('Z')
-# ax2 = ax2.voxels(voxel_array, facecolors=colors, edgecolor='k')
-#
-# plt.show()
+
+axes = [x, y, z]
+with open(f"structure_at_{ITERATIONS}", "wb") as fp:  # Pickling
+    pickle.dump(points_for_3D_plot, fp)
+with open(f"axes_at_{ITERATIONS}", "wb") as sp:  # Pickling
+    pickle.dump(axes, sp)
+
+# with open("test", "rb") as fp:  # Unpickling
+#     b = pickle.load(fp)
+
+RADIUS = 0.05
+larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
+detailed_3D = inv.cubify(inv.spherify(points_for_3D_plot, [x, y, z], RADIUS), [x, y, z])
+grid_1 = inv.cubify(source, [x, y, z])
+grid_2 = inv.cubify(area, [x, y, z])
+grid_3 = inv.cubify(larger_blocks, [x, y, z])
+
+voxel_array = grid_1 | grid_3
+colors = np.empty(voxel_array.shape, dtype=object)
+colors[grid_1] = 'y'
+colors[grid_3] = 'b'
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(projection='3d')
+ax2.set_title(
+    f'The 3D structure optimizing intensity, between x:({FLUX_AREA[0]},{FLUX_AREA[1]}), '
+    f'z:({FLUX_AREA[3]},{FLUX_AREA[4]} )'
+    f'at y:{FLUX_AREA[2]}.')
+ax2.set_xlabel('X')
+ax2.set_ylabel('Y')
+ax2.set_zlabel('Z')
+ax2 = ax2.voxels(voxel_array, facecolors=colors, edgecolor='k')
+
+plt.show()
 #
 # fig3 = plt.figure()
 # ax3 = fig3.add_subplot(projection='3d')

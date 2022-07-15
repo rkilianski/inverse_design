@@ -39,6 +39,7 @@ def make_3d_wave(k_list, p_list, frequency, width_f, comp_cell, obs_cell, n):
     p_coefficient = 1  # this is either 0.5 or 1, depending on if we have 1 or 2 waves in the xy plane
 
     for k_i, p_i in zip(k_list, p_list):
+        print("ki",k_i)
         kx, ky, kz = k_i
         e1, e2, e3 = p_i
         if e3 != 0:  # if the wave is polarised in z, the combination of kx and ky will oscillate in z
