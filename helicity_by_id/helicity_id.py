@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 10
+ITERATIONS = 20
 T = 20
 
 # Plane wave
@@ -41,7 +41,7 @@ BEAM_FACE_AXIS = 2  # same face as the optimisation area
 AXES = [SLICE_AXIS, BEAM_FACE_AXIS]
 
 # Vertices of the area to be optimised ,[x0,xn,y0,yn,z0] s.t. area of (xn-x0)*(yn-y0) at level z0
-FLUX_AREA = [-2, 2, -2, 2, 0]
+FLUX_AREA = [-3, -2, -1, 1, 0]
 
 material = mp.Medium(epsilon=1)
 geom_list = []
@@ -223,8 +223,8 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
 
     # data for drawing a rectangle of area of interest
     rect_x = x[fxni] - x[fx0i]
-    rect_y = z[fyni] - y[fy0i]
-    rec_data = [x[fx0i], y[fx0i], rect_x, rect_y]  # x0,y0,len x, len y
+    rect_y = y[fyni] - y[fy0i]
+    rec_data = [x[fx0i], y[fy0i], rect_x, rect_y]  # x0,y0,len x, len y
     plot_feats = [obs_area_line, rec_data]
 
     # source and area vertices for 3D plot
@@ -249,7 +249,23 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
 
 K = [np.array([1, 0, 0])]
 P = [np.array([0, 0, 1])]
-pw = m3d.make_3d_wave(K, P, FCEN, WIDTH, CELL, OBS_VOL, EPS)
+
+K1 = np.array([1, 0, 0])
+K2 = np.array([-1, 0, 0])
+K3 = np.array([0, 1, 0])
+K4 = np.array([0 - 1, 0])
+
+P1 = np.array([0, 0, 1])
+P2 = np.array([0, 0, 1])
+P3 = np.array([0, 0, 1])
+P4 = np.array([0, 0, 1])
+
+k_vecs = [K1, K2, K3, K4]
+pols = [P1, P2, P3, P4]
+
+
+pw = m3d.make_3d_wave(k_vecs, pols, FCEN, WIDTH, CELL, OBS_VOL, EPS)
+
 src_data = [CELL, pw, pml_layers, geom_list]
 sim_data = [RESOLUTION, AXES, ITERATIONS, OBS_VOL, FLUX_AREA, T, AXES]
 
