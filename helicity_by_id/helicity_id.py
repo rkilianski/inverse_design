@@ -105,7 +105,7 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
 
     # trial function
     if f_test is not None:
-        pattern = inv.install_function([x, y, z], f_test, z_obs_index)
+        pattern = inv.install_function_3D([x, y, z], f_test)
         print(pattern.shape)
     else:
         pattern = e_sq_fixed
@@ -252,16 +252,16 @@ P = [np.array([0, 0, 1])]
 
 K1 = np.array([1, 0, 0])
 K2 = np.array([-1, 0, 0])
-K3 = np.array([0, 1, 0])
-K4 = np.array([0 - 1, 0])
+# K3 = np.array([0, 1, 0])
+# K4 = np.array([0, - 1, 0])
 
 P1 = np.array([0, 0, 1])
 P2 = np.array([0, 0, 1])
-P3 = np.array([0, 0, 1])
-P4 = np.array([0, 0, 1])
+# P3 = np.array([0, 0, 1])
+# P4 = np.array([0, 0, 1])
 
-k_vecs = [K1, K2, K3, K4]
-pols = [P1, P2, P3, P4]
+k_vecs = [K1, K2]
+pols = [P1, P2]
 
 
 pw = m3d.make_3d_wave(k_vecs, pols, FCEN, WIDTH, CELL, OBS_VOL, EPS)
