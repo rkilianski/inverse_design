@@ -31,13 +31,26 @@ print(k_vectors)
 # rotating k vectors and e vectors
 # k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 
+# electric field pattern
+K1 = np.array([1, 0, 0])
+K2 = np.array([-1, 0, 0])
+K3 = np.array([0, 1, 0])
+K4 = np.array([0, - 1, 0])
+
+P1 = np.array([0, 0, 1])
+P2 = np.array([0, 0, 1])
+P3 = np.array([0, 0, 1])
+P4 = np.array([0, 0, 1])
+
+k_vecs = [K1, K2, K3, K4]
+pols = [P1, P2, P3, P4]
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
 
 # plane wave
-all_waves = m3d.make_3d_wave(k_vectors, e_vectors, FCEN, DF, [SX, SY, SZ], OBS_VOL, N)
+all_waves = m3d.make_3d_wave(k_vecs, pols, FCEN, DF, [SX, SY, SZ], OBS_VOL, N)
 
 sim = mp.Simulation(
     cell_size=CELL,

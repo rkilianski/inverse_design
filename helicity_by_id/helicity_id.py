@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 20
+ITERATIONS = 2
 T = 20
 
 # Plane wave
@@ -108,7 +108,11 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
         pattern = inv.install_function_3D([x, y, z], f_test)
         print(pattern.shape)
     else:
-        pattern = e_sq_fixed
+        # leave only the relevant slice, fill the rest with 1's
+        pat_2D = e_sq_fixed
+        pattern = np.broadcast_to(np.identity(36), (36, 36, 36))
+        pattern = pattern.copy()
+        pattern[:, :, z_obs_index] = pat_2D
 
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
@@ -280,7 +284,7 @@ lists = [intensity_anim, intensity_avg, points_to_delete, points_for_3D_plot]
 
 blocks_added = np.arange(ITERATIONS)
 
-data = produce_simulation(src_data, sim_data, blk_data, src_loc, lists, FCEN, WIDTH, fun)
+data = produce_simulation(src_data, sim_data, blk_data, src_loc, lists, FCEN, WIDTH)
 
 [x, y, z], intens_pat, forward_field, adjoint_field, df, beam_face, intensities, ind_src_obs, plt_mark = data
 
