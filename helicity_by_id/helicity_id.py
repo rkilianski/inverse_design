@@ -59,7 +59,7 @@ e_field_fixed = mpt.get_e_field()
 ########################################################################################################################
 
 def fun(u, v):
-    function = np.cos(4 * (u + v)) + np.cos(4 * (u - v))
+    function = np.cos(3 * (u + v)) + np.cos(3 * (u - v))
     norm_fun = 1 / np.amax(function)
     return norm_fun * function
 
@@ -284,7 +284,7 @@ lists = [intensity_anim, intensity_avg, points_to_delete, points_for_3D_plot]
 
 blocks_added = np.arange(ITERATIONS)
 
-data = produce_simulation(src_data, sim_data, blk_data, src_loc, lists, FCEN, WIDTH)
+data = produce_simulation(src_data, sim_data, blk_data, src_loc, lists, FCEN, WIDTH,fun)
 
 [x, y, z], intens_pat, forward_field, adjoint_field, df, beam_face, intensities, ind_src_obs, plt_mark = data
 

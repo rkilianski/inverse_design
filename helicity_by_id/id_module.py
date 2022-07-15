@@ -171,7 +171,7 @@ def df_match(old_field_arr, adj_field_arr, match_fun, vol=True):
     a1, a2, a3, eps2 = adj_field_arr
 
     if vol:
-        d_func = match_fun @ np.real((a1 * e1 + a2 * e2 + a3 * e3))
+        d_func = np.multiply(match_fun, np.real((a1 * e1 + a2 * e2 + a3 * e3)))
 
     else:
         d_func = np.tensordot(match_fun, np.real((a1 * e1 + a2 * e2 + a3 * e3)), axes=1)
