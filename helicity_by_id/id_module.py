@@ -167,6 +167,8 @@ def df(old_field_arr, adj_field_arr):
 
 def df_match(old_field_arr, adj_field_arr, match_fun, vol=True):
     """Bool Vol is chosen to indicate the dimensionality of the desired pattern, True by default(3D)."""
+    old_field_arr = old_field_arr/np.amax(old_field_arr)
+    adj_field_arr = adj_field_arr/np.amax(adj_field_arr)
     e1, e2, e3, eps1 = old_field_arr
     a1, a2, a3, eps2 = adj_field_arr
 
@@ -176,9 +178,6 @@ def df_match(old_field_arr, adj_field_arr, match_fun, vol=True):
     else:
         d_func = np.tensordot(match_fun, np.real((a1 * e1 + a2 * e2 + a3 * e3)), axes=1)
 
-    print("pattern shape", match_fun.shape)
-    print("intensity shape ", np.real((a1 * e1 + a2 * e2 + a3 * e3)).shape)
-    print("delta shape", d_func.shape)
     return d_func
 
 
@@ -249,6 +248,31 @@ def produce_adjoint_area(field, freq, dt, arr_coord, flux_params):
                     size=mp.Vector3(),
                     center=mp.Vector3(x_ax[i], y_ax[j], z_ax[z0]),
                     amplitude=np.conjugate(field[element][i, j, z0])))
+
+    return source_area, source_coords
+
+
+def produce_adjoint_volume(field, freq, dt, arr_coord, flux_params):
+    """ Excites dipoles over an area of interest. The region is the optimisation area shifted in x-axis.
+     This allows the beam to be contained in the optimisation region.
+     Returns [0], the list of sources and [1], their coordinates-used later for 3D plotting."""
+    source_area = []
+    source_coords = []
+    x_ax, y_ax, z_ax = arr_coord
+    x0, xn, y0, yn, z0 = flux_params
+    z_margin = int(len(z_ax) / 4)
+
+    for i in range(x0, xn):
+        for j in range(y0, yn):
+            for k in range(z0 - z_margin, z0 + z_margin):
+                for element in range(3):
+                    source_coords.append((i, j, k))
+                    source_area.append(mp.Source(
+                        mp.ContinuousSource(freq, width=dt, is_integrated=True),
+                        component=[mp.Ex, mp.Ey, mp.Ez][element],
+                        size=mp.Vector3(),
+                        center=mp.Vector3(x_ax[i], y_ax[j], z_ax[k]),
+                        amplitude=np.conjugate(field[element][i, j, k])))
 
     return source_area, source_coords
 

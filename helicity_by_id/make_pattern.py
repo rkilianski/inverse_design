@@ -62,7 +62,7 @@ sim = mp.Simulation(
 )
 
 sim.run(until=T)
-
+print("I am generating the intensity pattern...")
 ########################################################################################################################
 # PLOTS AND METADATA
 ########################################################################################################################
@@ -84,9 +84,9 @@ chosen_slice = np.argmin((np.array([x, y, z][SLICE_AXIS]) - SLICE_POSITION) ** 2
 
 Ex, Ey, Ez, Hx, Hy, Hz, eps_data = [a[1:-1, 1:-1, 1:-1] for a in [Ex, Ey, Ez, Hx, Hy, Hz, eps_data]]
 
-Ex, Ey, Ez, Hx, Hy, Hz, eps_data = [[a[chosen_slice, :, :], a[:, chosen_slice, :], a[:, :, chosen_slice]][SLICE_AXIS]
-                                    for a
-                                    in [Ex, Ey, Ez, Hx, Hy, Hz, eps_data]]
+# Ex, Ey, Ez, Hx, Hy, Hz, eps_data = [[a[chosen_slice, :, :], a[:, chosen_slice, :], a[:, :, chosen_slice]][SLICE_AXIS]
+#                                     for a
+#                                     in [Ex, Ey, Ez, Hx, Hy, Hz, eps_data]]
 
 intensityNorm = 1 / (Ex * np.conjugate(Ex) + Ey * np.conjugate(Ey) + Ez * np.conjugate(Ez))
 

@@ -13,32 +13,38 @@ SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell siz
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 12
+RESOLUTION = 10
 
-FCEN = 2/ np.pi  # pulse center frequency
+FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 
 WAIST = 12
 WAVELENGTH = 1
-M, N = 0,0
+M, N = 0, 0
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
-C = 1
-a1, a2, a3 = 5, 5, 5
-T1, T2, T3 = 0, 0, 0
-k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
+
+K1 = np.array([1, 0, 0])
+K2 = np.array([0, 1, 0])
+K3 = np.array([0, 0, 1])
+E1 = np.array([0, 1, 0])
+E2 = np.array([0, 0, 1])
+E3 = np.array([1, 0, 0])
+k_vectors = [K1, K2, K3]
+e_vectors = [E1, E2, E3]
+
 print(k_vectors)
 # rotating k vectors and e vectors
-k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
-# k_vectors, e_vectors = pr.rotate_on_axis(k_vectors, e_vectors, np.pi / 4, 2)
+k_vectors_r, e_vectors_r = pr.rotate_by_angle(k_vectors, e_vectors, np.pi / 4, 7 * np.pi / 4, prp_to=2)
+
 
 ########################################################################################################################
 # SIMULATION
 ########################################################################################################################
 T = 20  # run time
 
-all_waves = mhg.make_multiple_hg_beams(k_vectors, e_vectors, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=M, n=N)
+all_waves = mhg.make_multiple_hg_beams(k_vectors_r, e_vectors_r, FCEN, WAVELENGTH, [SX, SY, SZ], OBS_VOL, WAIST, m=M, n=N)
 
 sim = mp.Simulation(
     cell_size=CELL,
