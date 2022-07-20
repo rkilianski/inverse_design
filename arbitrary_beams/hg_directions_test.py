@@ -5,7 +5,7 @@ import meep as mp
 import numpy as np
 
 RESOLUTION = 8
-SLICE_AXIS = 0
+SLICE_AXIS = 2
 CHOSEN_POINT = 20
 
 DPML = 2  # thickness of perfectly matched layers (PMLs) around the box
@@ -62,7 +62,7 @@ k_vecs = [K1, K2, K3, K4, K5, K6, K7, K8, K9]
 
 for vector in k_vecs:
         beams.append(
-            mhg.make_hg_beam_any_dir(vector, P, FCEN, WAVELENGTH, [0, sy, sz], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z],
+            mhg.make_hg_beam_any_dir(vector, P, FCEN, WAVELENGTH, obs_vol, [SRC_POS_X, SRC_POS_Y, SRC_POS_Z],
                                      waist=WAIST,
                                      m=0, n=0))
 
@@ -87,15 +87,7 @@ for i in range(9):
     plots_2D.append(e_squared)
 
 fig, ax = plt.subplots(3, 3, figsize=(12, 12))
-K1 = np.array([1, 0, 0])
-K2 = np.array([0, 1, 0])
-K3 = np.array([0, 0, 1])
-K4 = np.array([1, 1, 0])
-K5 = np.array([1, -1, 0])
-K6 = np.array([-1, 1, 0])
-K7 = np.array([-1, -1, 0])
-K8 = np.array([-1, 0, 0])
-K9 = np.array([0, -1, 0])
+
 ax[0, 0].pcolormesh(x, y, plots_2D[0], cmap='Spectral', alpha=1)
 ax[0, 0].set_title('[1,0,0]]')
 

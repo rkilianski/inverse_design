@@ -15,17 +15,17 @@ OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
 RESOLUTION = 12
 
-FCEN = 2/ np.pi  # pulse center frequency
+FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 
 WAIST = 12
 WAVELENGTH = 1
-M, N = 0,0
+M, N = 0, 0
 ########################################################################################################################
 # K-VECTORS, E-VECTORS AND ROTATION
 ########################################################################################################################
 C = 1
-a1, a2, a3 = 5, 5, 5
+a1, a2, a3 = 1, 1, 1
 T1, T2, T3 = 0, 0, 0
 k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
 print(k_vectors)
