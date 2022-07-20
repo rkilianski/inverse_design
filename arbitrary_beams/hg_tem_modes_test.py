@@ -46,11 +46,15 @@ def get_fields(simulation, slice_axis, which_point):
     return fields_2D
 
 
+K = np.array([1, 0, 0])
+P = np.array([0, 0, 1])
+
 for i in range(3):
     for j in range(3):
         beams.append(
-            mhg.make_hg_beam(FCEN, WAVELENGTH, [0, sy, sz], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z], dir_prop=0, waist=WAIST,
-                             m=i, n=j))
+            mhg.make_hg_beam_any_dir(K, P, FCEN, WAVELENGTH, [0, sy, sz], [SRC_POS_X, SRC_POS_Y, SRC_POS_Z],
+                                     waist=WAIST,
+                                     m=i, n=j))
 
 for i in range(9):
     sim = mp.Simulation(
@@ -100,6 +104,5 @@ ax[2, 1].set_title('TEM21')
 
 ax[2, 2].pcolormesh(x, y, plots_2D[8], cmap='Spectral', alpha=1)
 ax[2, 2].set_title('TEM22')
-
 
 plt.show()
