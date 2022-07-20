@@ -61,10 +61,10 @@ P = np.array([0, 0, 1])
 k_vecs = [K1, K2, K3, K4, K5, K6, K7, K8, K9]
 
 for vector in k_vecs:
-        beams.append(
-            mhg.make_hg_beam_any_dir(vector, P, FCEN, WAVELENGTH, obs_vol, [SRC_POS_X, SRC_POS_Y, SRC_POS_Z],
-                                     waist=WAIST,
-                                     m=0, n=0))
+    beams.append(
+        mhg.make_hg_beam_any_dir(vector, P, FCEN, WAVELENGTH, obs_vol, [SRC_POS_X, SRC_POS_Y, SRC_POS_Z],
+                                 waist=WAIST,
+                                 m=0, n=0))
 
 for i in range(9):
     sim = mp.Simulation(
@@ -88,31 +88,31 @@ for i in range(9):
 
 fig, ax = plt.subplots(3, 3, figsize=(12, 12))
 
-ax[0, 0].pcolormesh(x, y, plots_2D[0], cmap='Spectral', alpha=1)
+ax[0, 0].pcolormesh(x, y, np.transpose(plots_2D[0]), cmap='Spectral', alpha=1)
 ax[0, 0].set_title('[1,0,0]]')
 
-ax[0, 1].pcolormesh(x, y, plots_2D[1], cmap='Spectral', alpha=1)
+ax[0, 1].pcolormesh(x, y, np.transpose(plots_2D[1]), cmap='Spectral', alpha=1)
 ax[0, 1].set_title('[0, 1, 0]')
 
-ax[0, 2].pcolormesh(x, y, plots_2D[2], cmap='Spectral', alpha=1)
+ax[0, 2].pcolormesh(x, y, np.transpose(plots_2D[2]), cmap='Spectral', alpha=1)
 ax[0, 2].set_title('[0, 0, 1]')
 
-ax[1, 0].pcolormesh(x, y, plots_2D[3], cmap='Spectral', alpha=1)
+ax[1, 0].pcolormesh(x, y, np.transpose(plots_2D[3]), cmap='Spectral', alpha=1)
 ax[1, 0].set_title('[1, 1, 0]')
 
-ax[1, 1].pcolormesh(x, y, plots_2D[4], cmap='Spectral', alpha=1)
+ax[1, 1].pcolormesh(x, y, np.transpose(plots_2D[4]), cmap='Spectral', alpha=1)
 ax[1, 1].set_title('[1, -1, 0]')
 
-ax[1, 2].pcolormesh(x, y, plots_2D[5], cmap='Spectral', alpha=1)
+ax[1, 2].pcolormesh(x, y, np.transpose(plots_2D[5]), cmap='Spectral', alpha=1)
 ax[1, 2].set_title('[-1, 1, 0]')
 
-ax[2, 0].pcolormesh(x, y, plots_2D[6], cmap='Spectral', alpha=1)
+ax[2, 0].pcolormesh(x, y, np.transpose(plots_2D[6]), cmap='Spectral', alpha=1)
 ax[2, 0].set_title('[-1, -1, 0]')
 
-ax[2, 1].pcolormesh(x, y, plots_2D[7], cmap='Spectral', alpha=1)
+ax[2, 1].pcolormesh(x, y, np.transpose(plots_2D[7]), cmap='Spectral', alpha=1)
 ax[2, 1].set_title('[-1, 0, 0]')
 
-ax[2, 2].pcolormesh(x, y, plots_2D[8], cmap='Spectral', alpha=1)
+ax[2, 2].pcolormesh(x, y, np.transpose(plots_2D[8]), cmap='Spectral', alpha=1)
 ax[2, 2].set_title('[0, -1, 0]')
 
 plt.show()
