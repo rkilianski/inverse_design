@@ -48,13 +48,17 @@ def place_hg_source(box, k_vec):
     Returns the 3D array source using meep's convention and putting the origin at the centre of the box."""
     # works for a cubic box
     side, _, _ = box
+    print("side",side)
     indices = [0, 1, 2]
     source = np.array([0.0, 0.0, 0.0])
     index = np.argmax(np.abs(k_vec))
+    print("index",index)
     indices.pop(index)
     largest = k_vec[index]
+    print("largest",largest)
     source[index] = -np.sign(k_vec[index]) * side / 2
     boundary = source[index]
+    print("boundary",boundary)
     lam = (boundary + largest) / largest
     for i in indices:
         source[i] = k_vec[i] * (lam - 1)

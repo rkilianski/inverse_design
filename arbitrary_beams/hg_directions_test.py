@@ -22,7 +22,7 @@ sy = CELL_Y + 2 * DPML
 sz = CELL_Z + 2 * DPML
 
 cell_3d = mp.Vector3(sx, sy, sz)
-obs_vol = mp.Vector3(OBS_X_A, OBS_Y_A, OBS_Z_A)
+obs_vol = [OBS_X_A, OBS_Y_A, OBS_Z_A]
 
 SRC_POS_X, SRC_POS_Y, SRC_POS_Z = -3, 0, 0
 
@@ -62,7 +62,7 @@ k_vecs = [K1, K2, K3, K4, K5, K6, K7, K8, K9]
 
 for vector in k_vecs:
     beams.append(
-        mhg.make_hg_beam_any_dir(vector, P, FCEN, WAVELENGTH, obs_vol, [SRC_POS_X, SRC_POS_Y, SRC_POS_Z],
+        mhg.make_hg_beam_any_dir(vector, P, FCEN, WAVELENGTH, [SRC_POS_X, SRC_POS_Y, SRC_POS_Z], obs_vol,
                                  waist=WAIST,
                                  m=0, n=0))
 
