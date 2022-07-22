@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt, animation, patches
 
 # Parameters of the simulation
 RESOLUTION = 6
-ITERATIONS = 100
+ITERATIONS = 50
 T = 20
 
 # Plane wave
@@ -108,7 +108,11 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
         pattern = inv.install_function_3D([x, y, z], f_test)
         print(pattern.shape)
     else:
-        pattern = e_sq_fixed
+        # leave only the relevant slice, fill the rest with 1's
+        pat_2D = e_sq_fixed
+        pattern = np.broadcast_to(np.identity(36), (36, 36, 36))
+        pattern = pattern.copy()
+        pattern[:, :, z_obs_index] = pat_2D
 
     # indices of the vertices for the area of interest
     fx0i, fy0i, fz0i = [inv.find_nearest(i, j) for i, j in zip([x, y, z], [fx0, fy0, fz0])]
@@ -183,6 +187,9 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
         intensity_2D_blocks = inv.delete_existing(intensity_2D, points_for_3D_plot, False, multi)
         intns_for_anim.append(intensity_2D_blocks)
 
+        # Recording the average intensity at the area of interest
+        # avg_intensity.append(inv.intensity_avg_area([x, y, z], old_field, flux_indices))
+
         # Adjoint source/s
         dipole_at_obs = inv.produce_adjoint_area(old_field, freq, adj_dt, [x, y, z], flux_indices)[0]
 
@@ -201,6 +208,7 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
 
         adjoint_field = inv.get_fields(sim_adjoint, obs_vol_)
         delta_f = inv.df_match(old_field, adjoint_field, pattern)
+        print("delta_f", delta_f.shape)
 
         #  picking the coordinates corresponding to the highest change in dF and updating the geometry
 
@@ -212,10 +220,16 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
 
         inv.add_block([x_inclusion, y_inclusion, z_inclusion], blk_size, geo_lst)
 
+    # data for drawing a 1D opt area
+    x_line = np.arange(x[fx0i], x[fxni], 0.02)
+    x_line_z = np.full(x_line.shape, FLUX_AREA[2])
+    obs_area_line = [x_line, x_line_z]
+
     # data for drawing a rectangle of area of interest
     rect_x = x[fxni] - x[fx0i]
     rect_y = y[fyni] - y[fy0i]
     rec_data = [x[fx0i], y[fy0i], rect_x, rect_y]  # x0,y0,len x, len y
+    plot_feats = [obs_area_line, rec_data]
 
     # source and area vertices for 3D plot
     src_ind = [(x_src_index, y_src_index, z_src_index)]
@@ -232,27 +246,26 @@ def produce_simulation(src_param_arr, sim_param, multi_block_arr, src_pt_arr, pt
     df_2D = delta_f[:, :, z_obs_index]
     pattern_2D = pattern[:, :, z_obs_index]
 
-    return axes, pattern_2D, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_obs_ind, rec_data
+    return axes, pattern_2D, forward_2D, adjoint_2D, df_2D, forward_2D_beam, intensities_list, src_obs_ind, plot_feats
 
 
 # ***************************************** CREATING A BEAM/WAVE *******************************************************
-# The field that we are starting with/ want to modify
 
 K = [np.array([1, 0, 0])]
 P = [np.array([0, 0, 1])]
 
 K1 = np.array([1, 0, 0])
 K2 = np.array([-1, 0, 0])
-K3 = np.array([0, 1, 0])
+# K3 = np.array([0, 1, 0])
 # K4 = np.array([0, - 1, 0])
 
 P1 = np.array([0, 0, 1])
 P2 = np.array([0, 0, 1])
-P3 = np.array([0, 0, 1])
+# P3 = np.array([0, 0, 1])
 # P4 = np.array([0, 0, 1])
 
-k_vecs = [K1, K3]
-pols = [P1, P3]
+k_vecs = [K1, K2]
+pols = [P1, P2]
 
 pw = m3d.make_3d_wave(k_vecs, pols, FCEN, WIDTH, CELL, OBS_VOL, EPS)
 
@@ -271,11 +284,12 @@ lists = [intensity_anim, intensity_avg, points_to_delete, points_for_3D_plot]
 
 blocks_added = np.arange(ITERATIONS)
 
-data = produce_simulation(src_data, sim_data, blk_data, src_loc, lists, FCEN, WIDTH)
+data = produce_simulation(src_data, sim_data, blk_data, src_loc, lists, FCEN, WIDTH,fun)
 
 [x, y, z], intens_pat, forward_field, adjoint_field, df, beam_face, intensities, ind_src_obs, plt_mark = data
 
-X0, Y0, X_LENGTH, Y_LENGTH = plt_mark
+red_line, rect_vert = plt_mark
+X0, Y0, X_LENGTH, Y_LENGTH = rect_vert
 source, area = ind_src_obs
 
 Ex, Ey, Ez, eps = forward_field
@@ -338,6 +352,7 @@ RADIUS = 0.05
 larger_blocks = inv.enlarge_block(points_for_3D_plot, [x, y, z], MULTIPLIER)
 detailed_3D = inv.cubify(inv.spherify(points_for_3D_plot, [x, y, z], RADIUS), [x, y, z])
 grid_1 = inv.cubify(source, [x, y, z])
+grid_2 = inv.cubify(area, [x, y, z])
 grid_3 = inv.cubify(larger_blocks, [x, y, z])
 
 voxel_array = grid_1 | grid_3
@@ -348,8 +363,8 @@ fig2 = plt.figure()
 ax2 = fig2.add_subplot(projection='3d')
 ax2.set_title(
     f'The 3D structure optimizing intensity, between x:({FLUX_AREA[0]},{FLUX_AREA[1]}), '
-    f'y:({FLUX_AREA[2]},{FLUX_AREA[3]} )'
-    f'at z:{FLUX_AREA[4]}.')
+    f'z:({FLUX_AREA[3]},{FLUX_AREA[4]} )'
+    f'at y:{FLUX_AREA[2]}.')
 ax2.set_xlabel('X')
 ax2.set_ylabel('Y')
 ax2.set_zlabel('Z')

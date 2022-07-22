@@ -61,8 +61,9 @@ def change_coords(k_vector):
         x_prop = 1, 0, 0
         y_prop = 0, 1, 0
 
+    new_dir = dir_prop, x_prop, y_prop
     print(f"k-vector {k_vector}: dir prop {dir_prop},x prop{x_prop}, y_prop{y_prop}")
-    return dir_prop, x_prop, y_prop
+    return new_dir
 
 
 def place_hg_source(box, k_vec):
@@ -84,7 +85,6 @@ def place_hg_source(box, k_vec):
         source[i] = k_vec[i] * (lam - 1)
         if abs(source[i]) < 1e-3:
             source[i] = 0
-    print(f"source {source} for kvec{k_vec}")
     return source
 
 
@@ -185,54 +185,15 @@ def hg_amp_func_any_dir(k_vector, pol_amp, waist_radius, wavelength, m, n):
     waist_radius - Gaussian beam waist,
     wavelength(float),
     m,n(int) - orders of Hermite polynomial in x and y directions, respectively"""
-    xp, yp, zp = change_coords(k_vector)  # new co-ords are normalised vectors,i.e x1 = [v1,v2,v3]
+
+    new_coords = change_coords(k_vector)  # new co-ords are normalised vectors,i.e x1 = [v1,v2,v3]
+    xp, yp, zp = new_coords
 
     def _hermite_fun(n_val, m_val):
         return special.hermite(n_val), special.hermite(m_val)
 
     def _hg_profile(mp_pos):
         prop_dir = xp[0] * mp_pos[0] + xp[1] * mp_pos[1] + xp[2] * mp_pos[2]
-        x_profile = yp[0] * mp_pos[0] + yp[1] * mp_pos[1] + yp[2] * mp_pos[2]
-        y_profile = zp[0] * mp_pos[0] + zp[1] * mp_pos[1] + zp[2] * mp_pos[2]
-        r_squared = x_profile ** 2 + y_profile ** 2
-
-        k = 2 * np.pi / wavelength
-        z_R = np.pi * (waist_radius ** 2) / wavelength
-
-        w = waist_radius * np.sqrt(1 + (prop_dir / z_R) ** 2)
-
-        h_n, h_m = _hermite_fun(n, m)
-
-        h_function = h_n(np.sqrt(2) * x_profile / w) * h_m(np.sqrt(2) * y_profile / w) * np.exp(
-            1j * np.arctan(prop_dir / z_R) * (1 + n + m))
-        exp_function = (waist_radius / w) * np.exp(-r_squared / (w ** 2)) * np.exp(
-            -1j * (k * prop_dir + k * r_squared * prop_dir / (2 * (prop_dir ** 2 + z_R ** 2))))
-
-        hg_beam = pol_amp * h_function * exp_function
-
-        return hg_beam
-
-    return _hg_profile
-
-
-def hg_amp_func_any_dir2(k_vector, pol_amp, waist_radius, wavelength, m, n):
-    """Generates the HG amplitude function in a given direction.
-    Takes: k_vector - dir. of propagation(arr),
-    pol_amp - polarisation(arr),
-    waist_radius - Gaussian beam waist,
-    wavelength(float),
-    m,n(int) - orders of Hermite polynomial in x and y directions, respectively"""
-    k_vector = k_vector.astype('float64')
-    k_vector /= np.linalg.norm(k_vector)
-    kx, ky, kz = k_vector
-
-    xp, yp, zp = change_coords(k_vector)  # new co-ords are normalised vectors,i.e x1 = [v1,v2,v3]
-
-    def _hermite_fun(n_val, m_val):
-        return special.hermite(n_val), special.hermite(m_val)
-
-    def _hg_profile(mp_pos):
-        prop_dir = kx * mp_pos[0] + ky * mp_pos[1] + kz * mp_pos[2]
         x_profile = yp[0] * mp_pos[0] + yp[1] * mp_pos[1] + yp[2] * mp_pos[2]
         y_profile = zp[0] * mp_pos[0] + zp[1] * mp_pos[1] + zp[2] * mp_pos[2]
         r_squared = x_profile ** 2 + y_profile ** 2

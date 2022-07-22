@@ -8,17 +8,17 @@ import set_waves_module as sw
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
+COMP_X, COMP_Y, COMP_Z = [10,10,10]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
-OBS_VOL = mp.Vector3(6, 6, 6)
+OBS_VOL = mp.Vector3(8,8,8)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 12
+RESOLUTION = 8
 
 FCEN = 2 / np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 
-WAIST = 12
+WAIST = 10
 WAVELENGTH = 1
 M, N = 0, 0
 ########################################################################################################################
@@ -28,7 +28,6 @@ C = 1
 a1, a2, a3 = 1, 1, 1
 T1, T2, T3 = 0, 0, 0
 k_vectors, e_vectors = sw.make_3_wave_NI(C, T1, T2, T3, a1, a2, a3)
-print(k_vectors)
 # rotating k vectors and e vectors
 k_vectors, e_vectors = pr.find_angles_and_rotate(k_vectors, e_vectors, prp_to=2)
 # k_vectors, e_vectors = pr.rotate_on_axis(k_vectors, e_vectors, np.pi / 4, 2)
@@ -89,12 +88,5 @@ divider = make_axes_locatable(ax)
 cax = divider.append_axes("right", size="5%", pad=0.05)
 
 plt.colorbar(im, cax=cax)
-# ax.set_title(f'Helicity Density 4 plane waves')
-
-# ax[1].pcolormesh(x, y, np.transpose(e_sq), cmap='OrRd', alpha=1)
-# ax[1].set_title('Intensity')
-#
-# ax[2].pcolormesh(x, y, np.transpose(e_sq), cmap='RdPu', alpha=1)
-# ax[2].set_title('H Squared')
 
 plt.show()

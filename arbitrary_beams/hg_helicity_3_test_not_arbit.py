@@ -8,17 +8,17 @@ import set_waves_module as sw
 import matplotlib.pyplot as plt
 
 DPML = 2  # thickness of PML layers
-COMP_X, COMP_Y, COMP_Z = [8, 8, 8]  # dimensions of the computational cell, not including PML
+COMP_X, COMP_Y, COMP_Z = [8,8,8]  # dimensions of the computational cell, not including PML
 SX, SY, SZ = COMP_X + 2 * DPML, COMP_Y + 2 * DPML, COMP_Z + 2 * DPML  # cell size, including PML
 CELL = mp.Vector3(SX, SY, SZ)
 OBS_VOL = mp.Vector3(6, 6, 6)
 PML_LAYERS = [mp.PML(DPML)]
-RESOLUTION = 10
+RESOLUTION = 6
 
-FCEN = 2 / np.pi  # pulse center frequency
+FCEN = 2/ np.pi  # pulse center frequency
 DF = 0.02  # turn-on bandwidth
 
-WAIST = 12
+WAIST = 10
 WAVELENGTH = 1
 M, N = 0, 0
 ########################################################################################################################
@@ -89,7 +89,7 @@ helicity_density = np.imag(intensityNorm * (Ex * np.conjugate(Hx) + Ey * np.conj
 
 fig, ax = plt.subplots(figsize=(12, 12))
 
-im = ax.pcolormesh(x, y, np.transpose(helicity_density), cmap='RdBu', alpha=1, vmin=-1, vmax=1)
+im = ax.pcolormesh(x, y, helicity_density, cmap='RdBu', alpha=1, vmin=-1, vmax=1)
 
 divider = make_axes_locatable(ax)
 cax = divider.append_axes("right", size="5%", pad=0.05)
